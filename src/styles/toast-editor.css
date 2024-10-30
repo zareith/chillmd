@@ -1,0 +1,9 @@
+.toastui-editor-defaultUI-toolbar button {
+    scale: 0.8;
+    margin: 0;
+}
+
+.toastui-editor-defaultUI-toolbar {
+    padding: 10px 20px 0 20px;
+    height: 35px;
+}
