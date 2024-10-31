@@ -5,6 +5,7 @@
 	"scripts": {
 		"dev": "vite",
 		"build": "vite build",
+		"deploy": "tsx ./src/scripts/deploy-site.ts",
 		"preview": "vite preview"
 	},
 	"dependencies": {
@@ -25,8 +26,11 @@
 	"devDependencies": {
 		"@preact/preset-vite": "^2.9.0",
 		"@types/filesystem": "^0.0.36",
+		"@types/node": "^22.8.5",
 		"eslint": "^9.13.0",
 		"eslint-config-preact": "^1.5.0",
+		"gh-pages": "^6.2.0",
+		"tsx": "^4.19.2",
 		"typescript": "^5.6.3",
 		"vite": "^5.3.3",
 		"vite-plugin-commonjs": "^0.10.3",
