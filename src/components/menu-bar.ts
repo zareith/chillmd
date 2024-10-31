@@ -15,7 +15,7 @@ export default function MenuBar() {
 		...S.props(s.container),
 	},
 		h("img", {
-			src: "/logo.svg",
+			src: "logo.svg",
 			height: 30,
 			width: 30,
 			...S.props(s.logo),

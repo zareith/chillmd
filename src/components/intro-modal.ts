@@ -12,7 +12,7 @@ export default function IntroModal(p: {
         h(Modal.Body, {},
             h("div", { ...S.props(s.primaryLogoContainer) },
                 h("img", {
-                    src: "/logo.svg",
+                    src: "logo.svg",
                     width: 100,
                     ...S.props(s.logo)
                 })),
@@ -31,7 +31,7 @@ export default function IntroModal(p: {
                                 href: "https://www.gnu.org/licenses/gpl-3.0.en.html",
                                 target: "_blank",
                             },
-                                h("img", { src: "/gplv3-logo.png", width: 80 }))),
+                                h("img", { src: "gplv3-logo.png", width: 80 }))),
                         h("td", {},
                             h("p", {},
                                 "This project is free as in free speech and licensed under open source ",
@@ -46,7 +46,7 @@ export default function IntroModal(p: {
                                 href: "https://github.com/zareith/chillmd",
                                 target: "_blank",
                             },
-                                h("img", { src: "/github-mark.svg", width: 30 }))),
+                                h("img", { src: "github-mark.svg", width: 30 }))),
                         h("td", {},
                             h("p", {}, "Your feedback and contributions are welcome.")))))))
 }
