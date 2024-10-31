@@ -4,7 +4,7 @@
 	"license": "GPL-3.0",
 	"scripts": {
 		"dev": "vite",
-		"build": "vite build",
+		"build": "cross-env BASE_PATH=\"https://zareith.github.io/chillmd/\" vite build",
 		"deploy": "tsx ./src/scripts/deploy-site.ts",
 		"preview": "vite preview"
 	},
@@ -27,6 +27,7 @@
 		"@preact/preset-vite": "^2.9.0",
 		"@types/filesystem": "^0.0.36",
 		"@types/node": "^22.8.5",
+		"cross-env": "^7.0.3",
 		"eslint": "^9.13.0",
 		"eslint-config-preact": "^1.5.0",
 		"gh-pages": "^6.2.0",
