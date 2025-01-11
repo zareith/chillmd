@@ -7,4 +7,3 @@
 User-friendly privacy-focused markdown editor running in your browser.
 
 [Open App](https://zareith.github.io/chillmd/)
-

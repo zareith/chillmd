@@ -5,8 +5,8 @@ import MenuBar from "./menu-bar"
 import Editor from "./editor"
 import { useLocalstorageState } from "rooks";
 import IntroModal from "./intro-modal"
-  import { ToastContainer } from 'react-toastify';
-  import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function App() {
 	const [didDismissIntro, setDismissIntro] = useLocalstorageState("chillmd:feat:intro", false)

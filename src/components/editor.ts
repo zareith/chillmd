@@ -1,55 +1,108 @@
-import { h } from "preact"
-import '@toast-ui/editor/dist/toastui-editor.css'
-import { Editor as TEditor } from '@toast-ui/react-editor'
-import "../styles/toast-editor.css"
-import { useEffect, useRef } from "preact/hooks"
-import * as fileStore from "../stores/files"
-import * as fileActions from "../actions/files"
-import { produce } from "immer"
-import { effect, signal } from "@preact/signals"
-import { useDuckShortcut } from '@ahmedayob/duck-shortcut'
+import {
+    AdmonitionDirectiveDescriptor,
+    BlockTypeSelect,
+    BoldItalicUnderlineToggles,
+    ChangeAdmonitionType,
+    codeBlockPlugin,
+    CodeToggle,
+    CreateLink,
+    directivesPlugin,
+    frontmatterPlugin,
+    headingsPlugin,
+    InsertAdmonition,
+    InsertCodeBlock,
+    InsertFrontmatter,
+    InsertTable,
+    InsertThematicBreak,
+    linkDialogPlugin,
+    linkPlugin,
+    listsPlugin,
+    ListsToggle,
+    markdownShortcutPlugin,
+    MDXEditor,
+    MDXEditorMethods,
+    quotePlugin,
+    tablePlugin,
+    toolbarPlugin,
+    UndoRedo,
+} from "@mdxeditor/editor";
+import { Fragment as Frag, h } from "preact";
+import "@mdxeditor/editor/style.css";
+import "../styles/toast-editor.css";
+import { useDuckShortcut } from "@ahmedayob/duck-shortcut";
+import { effect, signal } from "@preact/signals";
+import { produce } from "immer";
+import { useEffect, useRef } from "preact/hooks";
+import * as fileActions from "../actions/files";
+import * as fileStore from "../stores/files";
 
+const plugins = [
+    headingsPlugin(),
+    directivesPlugin({ directiveDescriptors: [AdmonitionDirectiveDescriptor] }),
+    frontmatterPlugin(),
+    linkPlugin(),
+    linkDialogPlugin(),
+    listsPlugin(),
+    codeBlockPlugin(),
+    quotePlugin(),
+    markdownShortcutPlugin(),
+    tablePlugin(),
+
+    toolbarPlugin({
+        toolbarClassName: "my-classname",
+        toolbarContents: () => h(Frag, {},
+            h(UndoRedo, {}),
+            h(BoldItalicUnderlineToggles, {}),
+            h(BlockTypeSelect, {}),
+            h(CreateLink, {}),
+            h(InsertCodeBlock, {}),
+            h(CodeToggle, {}),
+            h(InsertThematicBreak, {}),
+            h(ListsToggle, {}),
+            h(InsertTable, {}),
+            h(InsertFrontmatter, {}),
+            h(InsertAdmonition, {}),
+        ),
+    }),
+];
 
 export default function Editor() {
-	const editorRef = useRef<TEditor>()
-	const id = signal<string>(fileStore.currentFile.value.id)
+    const id = signal<string>(fileStore.currentFile.value.id);
+    const editorRef = useRef<MDXEditorMethods | null>(null);
 
-	useDuckShortcut({
-		keys: ['ctrl+s'],
-		onKeysPressed: fileActions.save
-	})
-	useDuckShortcut({
-		keys: ['ctrl+o'],
-		onKeysPressed: fileActions.open
-	})
+    useDuckShortcut({
+        keys: ["ctrl+s"],
+        onKeysPressed: fileActions.save,
+    });
+    useDuckShortcut({
+        keys: ["ctrl+o"],
+        onKeysPressed: fileActions.openFile,
+    });
 
-	effect(() => {
-		if (fileStore.currentFile.value.id !== id.value) {
-			const { content } = fileStore.currentFile.value
-			editorRef.current?.getInstance()?.setMarkdown(content)
-			id.value = fileStore.currentFile.value.id
-		}
-	});
+    effect(() => {
+        if (fileStore.currentFile.value.id !== id.value) {
+            const { content } = fileStore.currentFile.value;
+            editorRef.current?.setMarkdown(content);
+            id.value = fileStore.currentFile.value.id;
+        }
+    });
 
-	return h("div", {
-		style: {
-			height: "100%",
-			position: "relative",
-			overflow: "hidden"
-		}
-	},
-		h(TEditor, {
-			ref: editorRef,
-			previewStyle: "tab",
-			usageStatistics: false,
-			height: "100%",
-			initialValue: fileStore.currentFile.value.content,
-			onChange: () => {
-				const editor = editorRef.current;
-				const md = editor.getInstance().getMarkdown()
-				fileStore.currentFile.value = produce(fileStore.currentFile.value, d => {
-					d.content = md
-				})
-			}
-		}))
+    return h("div", {
+        style: {
+            height: "100%",
+            position: "relative",
+            overflow: "hidden",
+        },
+    },
+        h(MDXEditor, {
+            ref: editorRef,
+            markdown: fileStore.currentFile.value.content,
+            plugins,
+            onChange: (md) => {
+                fileStore.currentFile.value = produce(fileStore.currentFile.value, d => {
+                    d.content = md;
+                });
+            },
+        }),
+    );
 }
