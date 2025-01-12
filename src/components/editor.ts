@@ -3,8 +3,11 @@ import {
     BlockTypeSelect,
     BoldItalicUnderlineToggles,
     ChangeAdmonitionType,
+    ChangeCodeMirrorLanguage,
     codeBlockPlugin,
+    codeMirrorPlugin,
     CodeToggle,
+    ConditionalContents,
     CreateLink,
     directivesPlugin,
     frontmatterPlugin,
@@ -12,6 +15,7 @@ import {
     InsertAdmonition,
     InsertCodeBlock,
     InsertFrontmatter,
+    InsertSandpack,
     InsertTable,
     InsertThematicBreak,
     linkDialogPlugin,
@@ -22,7 +26,9 @@ import {
     MDXEditor,
     MDXEditorMethods,
     quotePlugin,
+    ShowSandpackInfo,
     tablePlugin,
+    thematicBreakPlugin,
     toolbarPlugin,
     UndoRedo,
 } from "@mdxeditor/editor";
@@ -42,25 +48,35 @@ const plugins = [
     linkPlugin(),
     linkDialogPlugin(),
     listsPlugin(),
-    codeBlockPlugin(),
+    codeBlockPlugin({ defaultCodeBlockLanguage: 'js' }),
+    codeMirrorPlugin({
+        codeBlockLanguages: {
+            ts: "TypeScript",
+            js: 'JavaScript',
+            css: 'CSS',
+            sql: "SQL",
+            yaml: "YAML",
+            go: "GO",
+        }
+    }),
     quotePlugin(),
     markdownShortcutPlugin(),
     tablePlugin(),
+    thematicBreakPlugin(),
 
     toolbarPlugin({
-        toolbarClassName: "my-classname",
         toolbarContents: () => h(Frag, {},
             h(UndoRedo, {}),
             h(BoldItalicUnderlineToggles, {}),
             h(BlockTypeSelect, {}),
             h(CreateLink, {}),
-            h(InsertCodeBlock, {}),
             h(CodeToggle, {}),
             h(InsertThematicBreak, {}),
             h(ListsToggle, {}),
             h(InsertTable, {}),
             h(InsertFrontmatter, {}),
             h(InsertAdmonition, {}),
+            h(InsertCodeBlock, {}),
         ),
     }),
 ];
@@ -83,6 +99,16 @@ export default function Editor() {
             position: "relative",
             overflow: "hidden",
         },
+        tabIndex: -1,
+        onClick: (e) => {
+            // Skip when items inside editor are clicked - because it interferes with functionality of
+            // some built in components
+            if (e.target instanceof Node)
+                for (const tbar of [...document.querySelectorAll('.mdxeditor')]) {
+                    if (tbar.contains(e.target)) return;
+                }
+            editorRef.current?.focus()
+        }
     },
         h(MDXEditor, {
             ref: editorRef,
