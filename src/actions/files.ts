@@ -2,56 +2,39 @@ import { produce } from "immer";
 import downloadFile from "js-file-download";
 import { toast } from "react-toastify";
 import * as filesStore from "../stores/files";
+import {
+    fileOpen,
+    directoryOpen,
+    fileSave,
+    supported,
+    FileWithHandle,
+} from 'browser-fs-access';
 
 export const openFile = async () => {
-    const [handle] = await window.showOpenFilePicker();
-    const file = await handle.getFile();
-    const content = await file.text();
+    const blob = await fileOpen({
+        extensions: [".markdown", ".md", ".txt", ".text"],
+        mimeTypes: ["text/*"]
+    })
     const id = filesStore.newId();
-
     filesStore.openFiles.value = produce(filesStore.openFiles.value, draft => {
         draft.push({
             id,
-            content,
-            handle,
+            blob
         });
     });
     filesStore.currentFile.value = {
         id,
-        content,
-        handle,
+        content: await blob.text(),
     };
 };
 
 export const save = async () => {
     const { id, content } = filesStore.currentFile.value;
-    const handle = filesStore.currentFile.value.handle ?? await window.showSaveFilePicker({
-        types: [{
-            accept: {
-                "text/plain": [".txt"],
-                "text/markdown": [".md", ".markdown"],
-            },
-        }],
-    });
-    if (id) {
-        const writable = await handle.createWritable();
-        await writable.write(content);
-        await writable.close();
-        filesStore.openFiles.value = produce(filesStore.openFiles.value, draft => {
-            draft.forEach(item => {
-                if (item.id === id) {
-                    item.content = content;
-                }
-            });
-        });
-    }
-};
-
-export const download = async () => {
-    downloadFile(
-        filesStore.currentFile.value.content,
-        "chillmd-doc.md",
-    );
+    const opened = filesStore.openFiles.value.find(of => of.id === id)
+    const blob = new Blob([content], {
+        type: "text/markdown"
+    })
+    await fileSave(blob, {}, opened.blob?.handle)
 };
 
 export const copy = async () => {

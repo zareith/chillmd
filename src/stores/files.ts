@@ -1,17 +1,16 @@
 import { signal } from "@preact/signals";
+import { FileWithHandle } from "browser-fs-access";
 
 export const newId = () => `${+new Date()}`;
 
 export const openFiles = signal<{
   id: string;
-  content: string;
-  handle: FileSystemFileHandle;
+  blob?: FileWithHandle
 }[]>([]);
 
 export const currentFile = signal<{
   content: string;
   id: string;
-  handle?: FileSystemFileHandle;
 }>({
   id: newId(),
   content: "",

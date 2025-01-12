@@ -4,6 +4,7 @@
     "license": "GPL-3.0",
     "scripts": {
         "dev": "vite",
+        "typecheck": "tsc",
         "build": "cross-env BASE_PATH=\"https://zareith.github.io/chillmd/\" vite build",
         "deploy": "tsx ./src/scripts/deploy-site.ts",
         "preview": "vite preview"
@@ -17,6 +18,7 @@
         "@toast-ui/editor": "^3.2.2",
         "@toast-ui/react-editor": "^3.2.3",
         "@types/wicg-file-system-access": "^2023.10.5",
+        "browser-fs-access": "^0.35.0",
         "hotkeys-js": "^3.13.9",
         "immer": "^10.1.1",
         "js-file-download": "^0.4.12",

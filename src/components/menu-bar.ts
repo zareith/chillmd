@@ -6,7 +6,7 @@ import * as fileActions from "../actions/files";
 const hasFSAPI = "showOpenFilePicker" in self;
 
 export default function MenuBar() {
-    const dropdownProps: DropdownProps = {
+    const dropdownProps: any = { // DEBUG issues with rsuite types
         appearance: "subtle",
         size: "xs",
     };
@@ -24,17 +24,12 @@ export default function MenuBar() {
                 title: "File",
                 ...dropdownProps,
             },
-            hasFSAPI && h(Dropdown.Item, {
+            h(Dropdown.Item, {
                 onClick: fileActions.openFile,
             }, "Open"),
-            hasFSAPI && h(Dropdown.Item, {
+            h(Dropdown.Item, {
                 onClick: fileActions.save,
             }, "Save"),
-            h(Dropdown.Menu, { title: "Download As" },
-                h(Dropdown.Item, {
-                    onClick: fileActions.download,
-                }, "Markdown"),
-            ),
             h(Dropdown.Menu, {
                 title: "Copy As"
             },
