@@ -17,8 +17,10 @@
         "@toast-ui/editor": "^3.2.2",
         "@toast-ui/react-editor": "^3.2.3",
         "@types/wicg-file-system-access": "^2023.10.5",
+        "hotkeys-js": "^3.13.9",
         "immer": "^10.1.1",
         "js-file-download": "^0.4.12",
+        "mousetrap": "^1.6.5",
         "preact": "^10.22.1",
         "react-toastify": "^10.0.6",
         "rooks": "^7.14.1",
@@ -27,6 +29,7 @@
     "devDependencies": {
         "@preact/preset-vite": "^2.9.0",
         "@types/filesystem": "^0.0.36",
+        "@types/mousetrap": "^1.6.15",
         "@types/node": "^22.8.5",
         "cross-env": "^7.0.3",
         "eslint": "^9.13.0",

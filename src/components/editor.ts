@@ -29,7 +29,6 @@ import {
 import { Fragment as Frag, h } from "preact";
 import "@mdxeditor/editor/style.css";
 import "../styles/toast-editor.css";
-import { useDuckShortcut } from "@ahmedayob/duck-shortcut";
 import { effect, signal } from "@preact/signals";
 import { produce } from "immer";
 import { useEffect, useRef } from "preact/hooks";
@@ -69,15 +68,6 @@ const plugins = [
 export default function Editor() {
     const id = signal<string>(fileStore.currentFile.value.id);
     const editorRef = useRef<MDXEditorMethods | null>(null);
-
-    useDuckShortcut({
-        keys: ["ctrl+s"],
-        onKeysPressed: fileActions.save,
-    });
-    useDuckShortcut({
-        keys: ["ctrl+o"],
-        onKeysPressed: fileActions.openFile,
-    });
 
     effect(() => {
         if (fileStore.currentFile.value.id !== id.value) {
