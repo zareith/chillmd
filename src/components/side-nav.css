@@ -1,0 +1,23 @@
+.Pane .chillmd-side-nav-container,
+.chillmd-side-nav-container.-expanded {
+    height: 100%;
+    width: 100%;
+}
+
+.chillmd-side-nav {
+    background: var(--rs-gray-200);
+    border-right: 1px solid var(--rs-gray-200);
+    display: flex;
+    flex-direction: column;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+.chillmd-side-nav-expanded {
+    background: var(--rs-gray-50);
+    border-right: 1px solid var(--rs-gray-200);
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    flex-shrink: 1;
+}

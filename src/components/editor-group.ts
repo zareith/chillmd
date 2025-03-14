@@ -13,6 +13,7 @@ export default function EditorGroup() {
         className: "chillmd-ed-group-container"
     },
         h_(Editor),
+
         h(FlexRowS, {
             className: "chillmd-ed-group-footer",
         },
@@ -25,7 +26,7 @@ export default function EditorGroup() {
                     h(Tabs.Tab, {
                         eventKey: f.id,
                         title: h(FlexRowC, {
-                            style: { 
+                            style: {
                                 gap: 5
                             }
                         },
@@ -37,9 +38,7 @@ export default function EditorGroup() {
                                 icon: h_(FiX),
                                 size: "xs",
                                 appearance: "subtle"
-                            })),
-                    })
-                )))),
-    )
+                            }))
+                    }))))))
 }
 

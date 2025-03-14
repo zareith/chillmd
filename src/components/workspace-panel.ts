@@ -13,7 +13,7 @@ import FolderFillIcon from '@rsuite/icons/FolderFill';
 import PageIcon from '@rsuite/icons/Page';
 import "./workspace-panel.css"
 import { useLayoutEffect, useRef } from "preact/hooks";
-import { openFile } from "../actions/files";
+import * as fileActions from "../actions/files";
 import { deepFind, FSTreeNode, workspace$ } from "../stores/files";
 
 
@@ -141,7 +141,8 @@ export default function WorkspacePanel() {
                         getChildren,
                         height: treeH$.value,
                         renderTreeNode: node => {
-                            const fsHandle = (node as FSTreeNode).handle
+                            const fsNode = node as FSTreeNode
+                            const fsHandle = fsNode.handle
                             return h(Dropdown, {
                                 size: "sm",
                                 noCaret: true,
@@ -156,10 +157,37 @@ export default function WorkspacePanel() {
                                         node.label),
                                 trigger: "contextMenu",
                             },
-                                fsHandle.kind === "file" ? h_(Dropdown.Item, "Open") : null,
-                                h_(Dropdown.Item, "Delete"),
-                                fsHandle.kind === "directory" ? h_(Dropdown.Item, "New File") : null,
-                                fsHandle.kind === "directory" ? h_(Dropdown.Item, "New Folder") : null)
+                                fsHandle.kind === "file"
+                                    ? h(Dropdown.Item, {
+                                        onClick: () => {
+                                            fileActions.openFile(fsNode.id)
+                                        }
+                                    },
+                                        "Open")
+                                    : null,
+                                h(Dropdown.Item, {
+                                    onClick: () => {
+                                        fileActions.deleteFile(fsNode.id)
+                                    }
+                                },
+                                    "Delete"),
+                                fsHandle.kind === "directory"
+                                    ? h(Dropdown.Item, {
+                                        onClick: () => {
+                                            selectedNode$.value = fsNode
+                                            newFileTriggerRef.current?.open()
+                                        }
+                                    },
+                                        "New File")
+                                    : null,
+                                fsHandle.kind === "directory"
+                                    ? h(Dropdown.Item, {
+                                        onClick: () => {
+                                            selectedNode$.value = fsNode
+                                            newFolderTriggerRef.current?.open()
+                                        }
+                                    }, "New Folder")
+                                    : null)
                         },
                         onSelect: async (node) => {
                             const fsNode = node as FSTreeNode
@@ -168,7 +196,7 @@ export default function WorkspacePanel() {
                             if (fsHandle.kind !== "file") return
                             const fileHandle = fsHandle as FileSystemFileHandle
                             const blob = await fileHandle.getFile()
-                            openFile(fsNode.id, Object.assign(blob, {
+                            fileActions.openFile(fsNode.id, Object.assign(blob, {
                                 handle: fileHandle
                             }))
                         },
@@ -215,6 +243,7 @@ const NewNodePopup = (p: {
     onSubmit: (name: string) => void
 }) => {
     const name$ = useSignal("")
+
     return h(Popover, {
         title: p.title,
         visible: true,
@@ -234,6 +263,7 @@ const NewNodePopup = (p: {
             }),
             h(InputGroup.Button, {
                 onClick: () => p.onSubmit(name$.value)
-            }, h_(FiCheck))
+            },
+                h_(FiCheck))
         ))
 }

@@ -1,6 +1,13 @@
 .chillmd-ed-group-container {
     flex-grow: 1;
     flex-shrink: 1;
+    background: white;
+}
+
+.Pane .chillmd-ed-group-container {
+    height: 100%;
+    width: 100%;
+
 }
 
 .chillmd-ed-group-footer {

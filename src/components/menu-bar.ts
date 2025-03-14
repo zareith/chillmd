@@ -1,9 +1,7 @@
 import * as S from "@stylexjs/stylex";
 import { h } from "preact";
-import { ButtonToolbar, Dropdown, DropdownMenuItemProps, DropdownProps, HStack } from "rsuite";
+import { ButtonToolbar, Dropdown } from "rsuite";
 import * as fileActions from "../actions/files";
-
-const hasFSAPI = "showOpenFilePicker" in self;
 
 export default function MenuBar() {
     const dropdownProps: any = { // DEBUG issues with rsuite types
@@ -28,7 +26,7 @@ export default function MenuBar() {
                 onClick: () => fileActions.openFile(),
             }, "Open"),
             h(Dropdown.Item, {
-                onClick: fileActions.save,
+                onClick: () => fileActions.save(),
             }, "Save"),
             h(Dropdown.Menu, {
                 title: "Copy As"

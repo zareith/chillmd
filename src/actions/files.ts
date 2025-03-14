@@ -7,6 +7,7 @@ import {
     FileWithHandle,
 } from 'browser-fs-access';
 import { nanoid } from "nanoid";
+import { update } from "../utils/immer";
 
 export const openFile = async (id?: string, blob?: FileWithHandle) => {
     id ??= nanoid();
@@ -15,7 +16,7 @@ export const openFile = async (id?: string, blob?: FileWithHandle) => {
         mimeTypes: ["text/*"]
     })
     const wipContent = await blob.text()
-    filesStore.openFiles$.value = produce(filesStore.openFiles$.value, draft => {
+    update(filesStore.openFiles$, draft => {
         let didFind = false;
         draft.forEach(_ => {
             _.isOpen = _.id === id;
@@ -33,7 +34,7 @@ export const openFile = async (id?: string, blob?: FileWithHandle) => {
 
 export const openNewFile = () => {
     const id = nanoid()
-    filesStore.openFiles$.value = produce(filesStore.openFiles$.value, draft => {
+    update(filesStore.openFiles$, draft => {
         draft.forEach(_ => {
             _.isOpen = false;
         })
@@ -53,8 +54,18 @@ export const closeFile = async (id: string) => {
     )
 }
 
+export const deleteFile = async (id: string) => {
+    closeFile(id)
+    update(filesStore.workspace$, w => {
+        if (!w.nodes) return
+        const f = filesStore.deepFind(w.nodes, id, true)
+        // @ts-ignore
+        f?.handle.remove()
+    })
+}
+
 export const switchFile = async (fileId: string) => {
-    filesStore.openFiles$.value = produce(filesStore.openFiles$.value, draft => {
+    update(filesStore.openFiles$, draft => {
         draft.forEach(_ => {
             _.isOpen = _.id === fileId
         })
@@ -63,7 +74,7 @@ export const switchFile = async (fileId: string) => {
 
 export const updateFile = async (fileId: string, content: string) => {
     let shouldAutoSave = false;
-    filesStore.openFiles$.value = produce(filesStore.openFiles$.value, draft => {
+    update(filesStore.openFiles$, draft => {
         for (const f of draft) {
             if (f.id === fileId) {
                 f.wipContent = content
