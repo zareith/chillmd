@@ -1,24 +1,37 @@
+import { FiFilePlus } from "react-icons/fi";
+import { FiCheck } from "react-icons/fi";
+import { FiFolderPlus } from "react-icons/fi";
+import { nanoid } from "nanoid"
+import { Dropdown, IconButton, Whisper, Popover, Input, InputGroup, WhisperInstance } from 'rsuite';
 import { effect, useSignal } from "@preact/signals";
 import { h, h_ } from "../utils/preact";
-import { layout$ } from "../stores/ui";
-import { workspaces$ } from "../stores/workspaces";
-import * as filesStore from "../stores/files";
-import { frag } from "../utils/preact";
 import { Button, Tree, useToaster } from "rsuite";
 import { FlexColC, FlexRowC } from "./flex";
 import { MaybeN } from "../utils/types";
 import { withToaster } from "../utils/with-toaster";
 import { TreeNode } from "rsuite/esm/internals/Tree/types";
-import { produce } from "immer";
 import FolderFillIcon from '@rsuite/icons/FolderFill';
 import PageIcon from '@rsuite/icons/Page';
 import "./workspace-panel.css"
 import { useLayoutEffect, useRef } from "preact/hooks";
-
-const maxDiscoveryLevel = 5;
+import { openFile } from "../actions/files";
 
 interface FSTreeNode extends TreeNode {
+    id: string
+    dir?: { id: string, handle: FileSystemDirectoryHandle }
     handle: FileSystemHandle
+    children?: FSTreeNode[]
+}
+
+const deepFind = (nodes: FSTreeNode[], id: string) => {
+    for (const n of nodes) {
+        if (n.id === id) return n;
+        if (n.children) {
+            const found = deepFind(n.children, id)
+            if (found) return found
+        }
+    }
+    return null
 }
 
 export default function WorkspacePanel() {
@@ -28,6 +41,10 @@ export default function WorkspacePanel() {
     const toaster = useToaster();
     const containerRef = useRef<HTMLDivElement | null>(null);
     const treeH$ = useSignal(0)
+    const treeKey$ = useSignal(nanoid())
+    const selectedNode$ = useSignal<FSTreeNode | null>(null)
+    const newFileTriggerRef = useRef<WhisperInstance>(null)
+    const newFolderTriggerRef = useRef<WhisperInstance>(null)
 
     useLayoutEffect(() => {
         const bounds = containerRef.current?.getBoundingClientRect();
@@ -40,6 +57,38 @@ export default function WorkspacePanel() {
             return;
         }
     })
+
+    const createNode = async (name: string, type: "file" | "dir") => {
+        let parentDir = selectedNode$.value?.dir?.handle ?? dir$.value
+        if (!parentDir) return
+        const id = nanoid();
+        let nextHandle: FileSystemHandle;
+        if (type === "file") {
+            nextHandle = await parentDir.getFileHandle(name, {
+                create: true
+            })
+        } else if (type === "dir") {
+            nextHandle = await parentDir.getDirectoryHandle(name, {
+                create: true
+            })
+        }
+        const parentId = selectedNode$.value?.dir?.id
+        const roots = nodes$.value
+        const node = parentId ? deepFind(roots, parentId) : null
+        const children = node ? (node.children ??= []) : roots
+        children.push({
+            id,
+            label: name,
+            value: name,
+            handle: nextHandle,
+            dir: parentId ? {
+                id: parentId,
+                handle: parentDir
+            } : undefined,
+            children: type === "dir" ? [] : undefined
+        })
+        nodes$.value = [...roots]
+    }
 
     return h("div", {
         className: "chillmd-ws-panel",
@@ -57,7 +106,7 @@ export default function WorkspacePanel() {
                     onClick: async () => {
                         dir$.value = await window.showDirectoryPicker();
                         withToaster(async () => {
-                            nodes$.value = await getNodesForDir(dir$.value)
+                            nodes$.value = await getNodesForDir(undefined, dir$.value)
                             isCreating$.value = false
                         }, {
                             toaster
@@ -65,55 +114,146 @@ export default function WorkspacePanel() {
                     }
                 }, "Open Folder")) :
 
-            treeH$.value
-                ? h(Tree, {
-                    data: nodes$.value,
-                    getChildren,
-                    height: treeH$.value,
-                    renderTreeNode: node => {
-                        const fsHandle = (node as FSTreeNode).handle
-                        return h(FlexRowC, { style: { gap: 5, width: "100%" } },
-                            fsHandle.kind === "directory" ?
-                                h_(FolderFillIcon) :
-                                h_(PageIcon),
-                            node.label,
-                        )
-                    },
-                    onSelect: async (node) => {
-                        const fsHandle = (node as FSTreeNode).handle
-                        if (fsHandle.kind !== "file") return
-                        const blob = await (fsHandle as FileSystemFileHandle).getFile()
-                        const id = filesStore.newId();
-                        filesStore.openFiles$.value = produce(filesStore.openFiles$.value, d => {
-                            d.push({ id, blob })
+            h("div", {
+                className: "chillmd-ws-tree"
+            },
+                h("div", {
+                    className: "chillmd-ws-header"
+                },
+                    h("div", { className: "chillmd-ws-title" },
+                        dir$.value.name),
+                    h(Whisper, {
+                        ref: newFileTriggerRef,
+                        placement: "bottom",
+                        trigger: "click",
+                        speaker: h(NewNodePopup, {
+                            title: "New File",
+                            onSubmit: (name: string) => {
+                                newFileTriggerRef.current.close();
+                                createNode(name, "file")
+                            }
+                        }),
+                        children: h(IconButton, {
+                            appearance: "subtle",
+                            icon: h_(FiFilePlus),
                         })
-                        const content = await blob.text();
-                        filesStore.currentFile$.value = { id, content }
-                    },
-                    showIndentLine: true,
-                })
-                : null
-    )
+                    }),
+                    h(Whisper, {
+                        ref: newFolderTriggerRef,
+                        placement: "bottom",
+                        trigger: "click",
+                        speaker: h(NewNodePopup, {
+                            title: "New Folder",
+                            onSubmit: (name: string) => {
+                                newFolderTriggerRef.current.close();
+                                createNode(name, "dir")
+                            }
+                        }),
+                        children: h(IconButton, {
+                            appearance: "subtle",
+                            icon: h_(FiFolderPlus)
+                        })
+                    }),
+                ),
+
+                treeH$.value
+                    ? h(Tree, {
+                        data: nodes$.value,
+                        showIndentLine: true,
+                        key: treeKey$.value,
+                        getChildren,
+                        height: treeH$.value,
+                        renderTreeNode: node => {
+                            const fsHandle = (node as FSTreeNode).handle
+                            return h(Dropdown, {
+                                size: "sm",
+                                noCaret: true,
+                                renderToggle: p =>
+                                    h(FlexRowC, {
+                                        ...p,
+                                        style: { gap: 5, width: "100%" }
+                                    },
+                                        fsHandle.kind === "directory" ?
+                                            h_(FolderFillIcon) :
+                                            h_(PageIcon),
+                                        node.label),
+                                trigger: "contextMenu",
+                            },
+                                fsHandle.kind === "file" ? h_(Dropdown.Item, "Open") : null,
+                                h_(Dropdown.Item, "Delete"),
+                                fsHandle.kind === "directory" ? h_(Dropdown.Item, "New File") : null,
+                                fsHandle.kind === "directory" ? h_(Dropdown.Item, "New Folder") : null)
+                        },
+                        onSelect: async (node) => {
+                            const fsNode = node as FSTreeNode
+                            selectedNode$.value = fsNode
+                            const fsHandle = fsNode.handle
+                            if (fsHandle.kind !== "file") return
+                            const blob = await (fsHandle as FileSystemFileHandle).getFile()
+                            openFile(fsNode.id, blob)
+                        },
+                    })
+                    : null))
 }
 
 
 const getChildren = async (node: TreeNode) => {
     const fsNode = node as FSTreeNode
+    if (fsNode.children?.length) return fsNode.children
     if (fsNode.handle.kind === "directory") {
-        return getNodesForDir(fsNode.handle as FileSystemDirectoryHandle)
+        return (fsNode.children = await getNodesForDir(fsNode.id, fsNode.handle as FileSystemDirectoryHandle))
     }
     return null;
 }
 
-const getNodesForDir = async (dir: FileSystemDirectoryHandle) => {
+const getNodesForDir = async (parentId: string | undefined, dir: FileSystemDirectoryHandle) => {
     const nodes: FSTreeNode[] = [];
+
     for await (const [key, value] of dir.entries()) {
+        const id = nanoid();
         nodes.push({
+            id,
             label: key,
             handle: value,
             value: key,
+            dir: value.kind === "directory" ? {
+                id,
+                handle: value
+            } : parentId ? {
+                id: parentId,
+                handle: dir
+            } : undefined,
             children: value.kind === "directory" ? [] : null
         })
     }
+
     return nodes;
+}
+
+const NewNodePopup = (p: {
+    title: string
+    onSubmit: (name: string) => void
+}) => {
+    const name$ = useSignal("")
+    return h(Popover, {
+        title: p.title,
+        visible: true,
+    },
+        h_(InputGroup,
+            h(Input, {
+                placeholder: "Name",
+                value: name$.value,
+                onChange: e => {
+                    name$.value = e
+                },
+                onKeyDown: e => {
+                    if (e.key === "Enter") {
+                        p.onSubmit(name$.value)
+                    }
+                }
+            }),
+            h(InputGroup.Button, {
+                onClick: () => p.onSubmit(name$.value)
+            }, h_(FiCheck))
+        ))
 }

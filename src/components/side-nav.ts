@@ -15,6 +15,7 @@ export default function SideNav() {
     return frag(
         h("div", { ...S.props(s.container) },
             h(Button, {
+                appearance: "subtle",
                 startIcon: h(Icon, {
                     as: MdDashboard,
                 }),
@@ -25,6 +26,7 @@ export default function SideNav() {
                 }
             }),
             h(Button, {
+                appearance: "subtle",
                 startIcon: h(Icon, {
                     as: MdSettings,
                 }),
@@ -41,12 +43,14 @@ export default function SideNav() {
 
 const s = S.create({
     container: {
-        background: "var(--rs-gray-50)",
+        background: "var(--rs-gray-200)",
+        borderRight: "1px solid var(--rs-gray-200)",
         display: "flex",
         flexDirection: "column",
     },
     expandedContainer: {
         background: "var(--rs-gray-50)",
+        borderRight: "1px solid var(--rs-gray-200)",
         display: "flex",
         flexDirection: "column",
         flexBasis: "300px",

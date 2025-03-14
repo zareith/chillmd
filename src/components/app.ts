@@ -1,23 +1,19 @@
 import * as S from '@stylexjs/stylex'
 import { h, h_ } from "../utils/preact"
-import { Icon } from '@rsuite/icons';
-import { Container, Header, Content, Sidebar, Sidenav, Nav } from "rsuite"
+import { Header } from "rsuite"
 import MenuBar from "./menu-bar"
-import Editor from "./editor"
 import { useLocalstorageState } from "rooks";
 import IntroModal from "./intro-modal"
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import {
-    MdDashboard,
-    MdSettings,
-} from 'react-icons/md';
 import SideNav from './side-nav';
-import { FlexRowC, FlexColS, FlexRowS } from './flex';
-import { useState } from 'preact/hooks';
+import { FlexColS, FlexRowS } from './flex';
+import EditorGroup from './editor-group';
 
 export default function App() {
-    const [didDismissIntro, setDismissIntro] = useState(false); // useLocalstorageState("chillmd:feat:intro", false)
+    const [didDismissIntro, setDismissIntro] =
+        // useState(false);
+        useLocalstorageState("chillmd:feat:intro", false)
 
     return h(FlexColS, { ...S.props(s.container) },
         h_(Header,
@@ -40,7 +36,7 @@ export default function App() {
                 }
             },
                 h_(SideNav),
-                h_(Editor))),
+                h_(EditorGroup))),
         !didDismissIntro && h(IntroModal, {
             onClose: () => setDismissIntro(true)
         }),

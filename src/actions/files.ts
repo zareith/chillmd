@@ -9,29 +9,65 @@ import {
     supported,
     FileWithHandle,
 } from 'browser-fs-access';
+import { nanoid } from "nanoid";
 
-export const openFile = async () => {
-    const blob = await fileOpen({
+export const openFile = async (id?: string, blob?: FileWithHandle) => {
+    id ??= nanoid();
+    blob ??= await fileOpen({
         extensions: [".markdown", ".md", ".txt", ".text"],
         mimeTypes: ["text/*"]
     })
-    const id = filesStore.newId();
+    const wipContent = await blob.text()
     filesStore.openFiles$.value = produce(filesStore.openFiles$.value, draft => {
-        draft.push({
+        let didFind = false;
+        draft.forEach(_ => {
+            _.isOpen = _.id === id;
+            if (_.isOpen) didFind = true;
+        })
+        if (!didFind) draft.push({
             id,
-            blob
+            blob,
+            name: blob.name,
+            isOpen: true,
+            wipContent,
         });
     });
-    filesStore.currentFile$.value = {
-        id,
-        content: await blob.text(),
-    };
 };
 
+export const openNewFile = () => {
+    const id = nanoid()
+    filesStore.openFiles$.value = produce(filesStore.openFiles$.value, draft => {
+        draft.forEach(_ => {
+            _.isOpen = false;
+        })
+        draft.push({
+            id,
+            name: "Untitled",
+            isOpen: true,
+            wipContent: "",
+        });
+    });
+    return id
+}
+
+export const closeFile = async (id: string) => {
+    filesStore.openFiles$.value = filesStore.openFiles$.value.filter(f =>
+        f.id !== id
+    )
+}
+
+export const switchFile = async (fileId: string) => {
+    filesStore.openFiles$.value = produce(filesStore.openFiles$.value, draft => {
+        draft.forEach(_ => {
+            _.isOpen = _.id === fileId
+        })
+    });
+}
+
 export const save = async () => {
-    const { id, content } = filesStore.currentFile$.value;
+    const { id, wipContent } = filesStore.currentFile$.value;
     const opened = filesStore.openFiles$.value.find(of => of.id === id)
-    const blob = new Blob([content], {
+    const blob = new Blob([wipContent], {
         type: "text/markdown"
     })
     await fileSave(blob, {}, opened.blob?.handle)
@@ -40,7 +76,7 @@ export const save = async () => {
 export const copy = async () => {
     toast.promise(
         navigator.clipboard.writeText(
-            filesStore.currentFile$.value.content,
+            filesStore.currentFile$.value.wipContent,
         ),
         {
             success: "Copied to clipboard",

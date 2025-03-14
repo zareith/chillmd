@@ -2,12 +2,9 @@ import {
     AdmonitionDirectiveDescriptor,
     BlockTypeSelect,
     BoldItalicUnderlineToggles,
-    ChangeAdmonitionType,
-    ChangeCodeMirrorLanguage,
     codeBlockPlugin,
     codeMirrorPlugin,
     CodeToggle,
-    ConditionalContents,
     CreateLink,
     directivesPlugin,
     frontmatterPlugin,
@@ -15,7 +12,6 @@ import {
     InsertAdmonition,
     InsertCodeBlock,
     InsertFrontmatter,
-    InsertSandpack,
     InsertTable,
     InsertThematicBreak,
     linkDialogPlugin,
@@ -26,7 +22,6 @@ import {
     MDXEditor,
     MDXEditorMethods,
     quotePlugin,
-    ShowSandpackInfo,
     tablePlugin,
     thematicBreakPlugin,
     toolbarPlugin,
@@ -34,10 +29,11 @@ import {
 } from "@mdxeditor/editor";
 import { Fragment as Frag, h } from "preact";
 import "@mdxeditor/editor/style.css";
+import "./editor.css"
 import "../styles/toast-editor.css";
 import { effect, signal } from "@preact/signals";
 import { produce } from "immer";
-import { useEffect, useRef } from "preact/hooks";
+import { useRef } from "preact/hooks";
 import * as fileActions from "../actions/files";
 import * as fileStore from "../stores/files";
 
@@ -82,13 +78,20 @@ const plugins = [
 ];
 
 export default function Editor() {
-    const id = signal<string>(fileStore.currentFile$.value.id);
+    const id = signal<string | null>(fileStore.currentFile$.value?.id);
     const editorRef = useRef<MDXEditorMethods | null>(null);
 
     effect(() => {
-        if (fileStore.currentFile$.value.id !== id.value) {
-            const { content } = fileStore.currentFile$.value;
-            editorRef.current?.setMarkdown(content);
+        if (!fileStore.currentFile$.value) {
+            const firstId = fileStore.openFiles$.value[0]?.id
+            if (firstId) fileActions.switchFile(firstId)
+            else {
+                const newId = fileActions.openNewFile();
+                id.value = newId;
+            }
+        } else if (fileStore.currentFile$.value.id !== id.value) {
+            const { wipContent } = fileStore.currentFile$.value;
+            editorRef.current?.setMarkdown(wipContent);
             id.value = fileStore.currentFile$.value.id;
         }
     });
@@ -119,11 +122,15 @@ export default function Editor() {
         },
             h(MDXEditor, {
                 ref: editorRef,
-                markdown: fileStore.currentFile$.value.content,
+                markdown: fileStore.currentFile$.value?.wipContent ?? "",
                 plugins,
                 onChange: (md) => {
-                    fileStore.currentFile$.value = produce(fileStore.currentFile$.value, d => {
-                        d.content = md;
+                    fileStore.openFiles$.value = produce(fileStore.openFiles$.value, d => {
+                        for (const f of d) {
+                            if (f.id === id.value) {
+                                f.wipContent = md
+                            }
+                        }
                     });
                 },
             }),

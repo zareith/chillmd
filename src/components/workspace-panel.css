@@ -9,3 +9,13 @@
     max-height: inherit;
     height: 100%;
 }
+.chillmd-ws-header {
+    background: var(--rs-gray-200);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px;
+}
+.chillmd-ws-title {
+    flex-grow: 1
+}

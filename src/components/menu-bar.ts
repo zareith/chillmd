@@ -25,7 +25,7 @@ export default function MenuBar() {
                 ...dropdownProps,
             },
             h(Dropdown.Item, {
-                onClick: fileActions.openFile,
+                onClick: () => fileActions.openFile(),
             }, "Open"),
             h(Dropdown.Item, {
                 onClick: fileActions.save,
@@ -68,6 +68,7 @@ export default function MenuBar() {
 const s = S.create({
     container: {
         background: "var(--rs-gray-50)",
+        borderBottom: "1px solid var(--rs-gray-200)",
         paddingTop: "5px",
         paddingBottom: "5px",
     },
