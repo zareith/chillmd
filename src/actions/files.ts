@@ -1,12 +1,9 @@
 import { produce } from "immer";
-import downloadFile from "js-file-download";
 import { toast } from "react-toastify";
 import * as filesStore from "../stores/files";
 import {
     fileOpen,
-    directoryOpen,
     fileSave,
-    supported,
     FileWithHandle,
 } from 'browser-fs-access';
 import { nanoid } from "nanoid";
@@ -64,8 +61,34 @@ export const switchFile = async (fileId: string) => {
     });
 }
 
-export const save = async () => {
-    const f = filesStore.currentFile$.value
+export const updateFile = async (fileId: string, content: string) => {
+    let shouldAutoSave = false;
+    filesStore.openFiles$.value = produce(filesStore.openFiles$.value, draft => {
+        for (const f of draft) {
+            if (f.id === fileId) {
+                f.wipContent = content
+            }
+            if (f.blob?.handle) shouldAutoSave = true;
+        }
+    })
+    if (shouldAutoSave)
+        scheduleSave(fileId)
+}
+
+const saveTimeouts: Record<string, any> = {}
+
+const scheduleSave = (fileId: string) => {
+    if (saveTimeouts[fileId]) return;
+    saveTimeouts[fileId] = setTimeout(() => {
+        saveTimeouts[fileId] = undefined
+        save(fileId)
+    }, 500);
+}
+
+export const save = async (fileId?: string) => {
+    const f = fileId
+        ? filesStore.openFiles$.value.find(_ => _.id === fileId)
+        : filesStore.currentFile$.value
     if (!f) return
     const blob = new Blob([f.wipContent], {
         type: "text/markdown"

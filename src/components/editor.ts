@@ -125,13 +125,7 @@ export default function Editor() {
                 markdown: fileStore.currentFile$.value?.wipContent ?? "",
                 plugins,
                 onChange: (md) => {
-                    fileStore.openFiles$.value = produce(fileStore.openFiles$.value, d => {
-                        for (const f of d) {
-                            if (f.id === id.value) {
-                                f.wipContent = md
-                            }
-                        }
-                    });
+                    fileActions.updateFile(fileStore.currentFile$.value.id, md)
                 },
             }),
         ));
