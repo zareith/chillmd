@@ -65,12 +65,12 @@ export const switchFile = async (fileId: string) => {
 }
 
 export const save = async () => {
-    const { id, wipContent } = filesStore.currentFile$.value;
-    const opened = filesStore.openFiles$.value.find(of => of.id === id)
-    const blob = new Blob([wipContent], {
+    const f = filesStore.currentFile$.value
+    if (!f) return
+    const blob = new Blob([f.wipContent], {
         type: "text/markdown"
     })
-    await fileSave(blob, {}, opened.blob?.handle)
+    await fileSave(blob, {}, f.blob.handle)
 };
 
 export const copy = async () => {

@@ -3,11 +3,10 @@ import { FiCheck } from "react-icons/fi";
 import { FiFolderPlus } from "react-icons/fi";
 import { nanoid } from "nanoid"
 import { Dropdown, IconButton, Whisper, Popover, Input, InputGroup, WhisperInstance } from 'rsuite';
-import { effect, useSignal } from "@preact/signals";
+import { useComputed, useSignal } from "@preact/signals";
 import { h, h_ } from "../utils/preact";
 import { Button, Tree, useToaster } from "rsuite";
 import { FlexColC, FlexRowC } from "./flex";
-import { MaybeN } from "../utils/types";
 import { withToaster } from "../utils/with-toaster";
 import { TreeNode } from "rsuite/esm/internals/Tree/types";
 import FolderFillIcon from '@rsuite/icons/FolderFill';
@@ -15,29 +14,11 @@ import PageIcon from '@rsuite/icons/Page';
 import "./workspace-panel.css"
 import { useLayoutEffect, useRef } from "preact/hooks";
 import { openFile } from "../actions/files";
+import { deepFind, FSTreeNode, workspace$ } from "../stores/files";
 
-interface FSTreeNode extends TreeNode {
-    id: string
-    dir?: { id: string, handle: FileSystemDirectoryHandle }
-    handle: FileSystemHandle
-    children?: FSTreeNode[]
-}
-
-const deepFind = (nodes: FSTreeNode[], id: string) => {
-    for (const n of nodes) {
-        if (n.id === id) return n;
-        if (n.children) {
-            const found = deepFind(n.children, id)
-            if (found) return found
-        }
-    }
-    return null
-}
 
 export default function WorkspacePanel() {
-    const isCreating$ = useSignal(false)
-    const dir$ = useSignal<MaybeN<FileSystemDirectoryHandle>>(null)
-    const nodes$ = useSignal<FSTreeNode[]>([])
+    const isCreating$ = useComputed(() => !workspace$.value)
     const toaster = useToaster();
     const containerRef = useRef<HTMLDivElement | null>(null);
     const treeH$ = useSignal(0)
@@ -51,15 +32,8 @@ export default function WorkspacePanel() {
         treeH$.value = bounds.height
     })
 
-    effect(() => {
-        if (!dir$.value) {
-            isCreating$.value = true;
-            return;
-        }
-    })
-
     const createNode = async (name: string, type: "file" | "dir") => {
-        let parentDir = selectedNode$.value?.dir?.handle ?? dir$.value
+        let parentDir = selectedNode$.value?.dir?.handle ?? workspace$.value?.dir
         if (!parentDir) return
         const id = nanoid();
         let nextHandle: FileSystemHandle;
@@ -73,7 +47,7 @@ export default function WorkspacePanel() {
             })
         }
         const parentId = selectedNode$.value?.dir?.id
-        const roots = nodes$.value
+        const roots = workspace$.value.nodes
         const node = parentId ? deepFind(roots, parentId) : null
         const children = node ? (node.children ??= []) : roots
         children.push({
@@ -87,7 +61,10 @@ export default function WorkspacePanel() {
             } : undefined,
             children: type === "dir" ? [] : undefined
         })
-        nodes$.value = [...roots]
+        workspace$.value = {
+            ...workspace$.value,
+            nodes: [...roots],
+        }
     }
 
     return h("div", {
@@ -104,10 +81,10 @@ export default function WorkspacePanel() {
                     appearance: "primary",
                     size: "xs",
                     onClick: async () => {
-                        dir$.value = await window.showDirectoryPicker();
                         withToaster(async () => {
-                            nodes$.value = await getNodesForDir(undefined, dir$.value)
-                            isCreating$.value = false
+                            const dir = await window.showDirectoryPicker();
+                            const nodes = await getNodesForDir(undefined, dir);
+                            workspace$.value = { dir, nodes }
                         }, {
                             toaster
                         })
@@ -121,7 +98,7 @@ export default function WorkspacePanel() {
                     className: "chillmd-ws-header"
                 },
                     h("div", { className: "chillmd-ws-title" },
-                        dir$.value.name),
+                        workspace$.value.dir.name),
                     h(Whisper, {
                         ref: newFileTriggerRef,
                         placement: "bottom",
@@ -158,7 +135,7 @@ export default function WorkspacePanel() {
 
                 treeH$.value
                     ? h(Tree, {
-                        data: nodes$.value,
+                        data: workspace$.value.nodes ?? [],
                         showIndentLine: true,
                         key: treeKey$.value,
                         getChildren,
@@ -189,8 +166,11 @@ export default function WorkspacePanel() {
                             selectedNode$.value = fsNode
                             const fsHandle = fsNode.handle
                             if (fsHandle.kind !== "file") return
-                            const blob = await (fsHandle as FileSystemFileHandle).getFile()
-                            openFile(fsNode.id, blob)
+                            const fileHandle = fsHandle as FileSystemFileHandle
+                            const blob = await fileHandle.getFile()
+                            openFile(fsNode.id, Object.assign(blob, {
+                                handle: fileHandle
+                            }))
                         },
                     })
                     : null))
