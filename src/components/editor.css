@@ -2,3 +2,11 @@
     padding: 5px;
     border-radius: 0;
 }
+
+.mdxeditor-root-contenteditable {
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 50px;
+    margin-bottom: 50px;
+}
