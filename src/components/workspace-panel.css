@@ -1,0 +1,11 @@
+.chillmd-ws-panel {
+    height: 100%;
+}
+.chillmd-ws-panel .rs-tree {
+    height: 100%;
+    overflow: auto;
+}
+.chillmd-ws-panel .rs-tree-view {
+    max-height: inherit;
+    height: 100%;
+}

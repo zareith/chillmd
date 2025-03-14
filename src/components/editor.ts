@@ -82,43 +82,50 @@ const plugins = [
 ];
 
 export default function Editor() {
-    const id = signal<string>(fileStore.currentFile.value.id);
+    const id = signal<string>(fileStore.currentFile$.value.id);
     const editorRef = useRef<MDXEditorMethods | null>(null);
 
     effect(() => {
-        if (fileStore.currentFile.value.id !== id.value) {
-            const { content } = fileStore.currentFile.value;
+        if (fileStore.currentFile$.value.id !== id.value) {
+            const { content } = fileStore.currentFile$.value;
             editorRef.current?.setMarkdown(content);
-            id.value = fileStore.currentFile.value.id;
+            id.value = fileStore.currentFile$.value.id;
         }
     });
 
     return h("div", {
         style: {
-            height: "100%",
             position: "relative",
-            overflow: "hidden",
-        },
-        tabIndex: -1,
-        onClick: (e) => {
-            // Skip when items inside editor are clicked - because it interferes with functionality of
-            // some built in components
-            if (e.target instanceof Node)
-                for (const tbar of [...document.querySelectorAll('.mdxeditor')]) {
-                    if (tbar.contains(e.target)) return;
-                }
-            editorRef.current?.focus()
+            flexGrow: 1,
+            flexShrink: 1,
         }
     },
-        h(MDXEditor, {
-            ref: editorRef,
-            markdown: fileStore.currentFile.value.content,
-            plugins,
-            onChange: (md) => {
-                fileStore.currentFile.value = produce(fileStore.currentFile.value, d => {
-                    d.content = md;
-                });
+        h("div", {
+            style: {
+                height: "100%",
+                position: "relative",
+                overflow: "auto",
             },
-        }),
-    );
+            tabIndex: -1,
+            onClick: (e) => {
+                // Skip when items inside editor are clicked - because it interferes with functionality of
+                // some built in components
+                if (e.target instanceof Node)
+                    for (const tbar of [...document.querySelectorAll('.mdxeditor')]) {
+                        if (tbar.contains(e.target)) return;
+                    }
+                editorRef.current?.focus()
+            }
+        },
+            h(MDXEditor, {
+                ref: editorRef,
+                markdown: fileStore.currentFile$.value.content,
+                plugins,
+                onChange: (md) => {
+                    fileStore.currentFile$.value = produce(fileStore.currentFile$.value, d => {
+                        d.content = md;
+                    });
+                },
+            }),
+        ));
 }
