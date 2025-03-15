@@ -1,6 +1,7 @@
 # ChillMD
 
 ⚠️ ChillMD is being actively developed. There may be bugs and incomplete features. [See Roadmap](https://github.com/users/zareith/projects/1)
+
 ⚠️ For best experience Chromium or chromium based browsers like Vivaldi, Brave, Google Chrome etc. are recommended. [More details](https://github.com/zareith/chillmd/issues/1)
 
 <h2 align="center">
