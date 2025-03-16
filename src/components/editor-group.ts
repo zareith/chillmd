@@ -5,7 +5,6 @@ import { h, h_ } from "../utils/preact";
 import Editor from "./editor";
 import { FlexColS, FlexRowC, FlexRowS } from "./flex";
 import "./editor-group.css"
-import { Fragment } from "preact/jsx-runtime";
 import { FiX } from "react-icons/fi";
 
 export default function EditorGroup() {

@@ -3,7 +3,7 @@ import SplitPane from "react-split-pane"
 import { h, h_ } from "../utils/preact"
 import { Header } from "rsuite"
 import MenuBar from "./menu-bar"
-import { useLocalstorageState } from "rooks";
+import { useLocalStorage } from "react-use";
 import IntroModal from "./intro-modal"
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -18,7 +18,7 @@ import { useSignal, useSignalEffect } from '@preact/signals'
 export default function App() {
     const [didDismissIntro, setDismissIntro] =
         // useState(false);
-        useLocalstorageState("chillmd:feat:intro", false)
+        useLocalStorage("chillmd:feat:intro", false)
     const isWide = useLayoutWide();
     const splitSize$ = useSignal(40);
 
