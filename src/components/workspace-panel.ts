@@ -1,4 +1,5 @@
 import { FiFilePlus } from "react-icons/fi";
+import { sortBy } from "remeda"
 import { FiCheck } from "react-icons/fi";
 import { FiFolderPlus } from "react-icons/fi";
 import { nanoid } from "nanoid"
@@ -214,16 +215,20 @@ const getChildren = async (node: TreeNode) => {
     return null;
 }
 
-const getNodesForDir = async (parentId: string | undefined, dir: FileSystemDirectoryHandle) => {
+const getNodesForDir = async (
+    parentId: string | undefined,
+    dir: FileSystemDirectoryHandle,
+) => {
     const nodes: FSTreeNode[] = [];
 
     for await (const [key, value] of dir.entries()) {
+        if (key.match(/^(\.|_)/)) continue;
         const id = nanoid();
         nodes.push({
             id,
             label: key,
             handle: value,
-            value: key,
+            value: id,
             dir: value.kind === "directory" ? {
                 id,
                 handle: value
@@ -235,7 +240,7 @@ const getNodesForDir = async (parentId: string | undefined, dir: FileSystemDirec
         })
     }
 
-    return nodes;
+    return sortBy(nodes, _ => (_.label as string).toLowerCase());
 }
 
 const NewNodePopup = (p: {

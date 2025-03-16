@@ -3,6 +3,7 @@ import {
     BlockTypeSelect,
     BoldItalicUnderlineToggles,
     codeBlockPlugin,
+    CodeMirrorEditor,
     codeMirrorPlugin,
     CodeToggle,
     CreateLink,
@@ -40,6 +41,7 @@ import * as fileStore from "../stores/files";
 import { h_ } from "../utils/preact";
 import { nanoid } from "nanoid";
 import { fileSave } from "browser-fs-access";
+import { mermaidCMPlugins, MermaidCodeEditorDescriptor } from "./plugins/mermaid-plugin";
 
 const plugins = [
     headingsPlugin(),
@@ -48,8 +50,19 @@ const plugins = [
     linkPlugin(),
     linkDialogPlugin(),
     listsPlugin(),
-    codeBlockPlugin({ defaultCodeBlockLanguage: 'js' }),
+    codeBlockPlugin({
+        defaultCodeBlockLanguage: 'js',
+        codeBlockEditorDescriptors: [
+            MermaidCodeEditorDescriptor,
+            {
+                priority: 2,
+                match: (lang) => lang !== "mermaid" && lang !== "mmd",
+                Editor: CodeMirrorEditor
+            }
+        ],
+    }),
     codeMirrorPlugin({
+        codeMirrorExtensions: [...mermaidCMPlugins],
         codeBlockLanguages: {
             ts: "TypeScript",
             js: 'JavaScript',
@@ -57,6 +70,7 @@ const plugins = [
             sql: "SQL",
             yaml: "YAML",
             go: "GO",
+            mmd: "Mermaid",
         }
     }),
     quotePlugin(),
