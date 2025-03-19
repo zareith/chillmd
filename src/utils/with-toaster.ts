@@ -23,18 +23,18 @@ export const withToaster = async <T>(
                 h(Notification, {
                     type: "success"
                 },
-                    opts.messages.success === true
+                    opts.messages?.success === true
                         ? "Operation Successful"
-                        : opts.messages.success))
+                        : opts.messages?.success))
     } catch (e) {
         if (opts.messages?.error !== false) {
             opts.toaster.push(
                 h(Notification, {
                     type: "error"
                 },
-                    opts.messages.error === true
+                    opts.messages?.error === true
                         ? "Operation Failed"
-                        : opts.messages.error))
+                        : opts.messages?.error))
         }
         if (opts.suppress === false) throw e;
     }

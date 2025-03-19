@@ -57,7 +57,7 @@ export const closeFile = async (id: string) => {
 export const deleteFile = async (id: string) => {
     closeFile(id)
     update(filesStore.workspace$, w => {
-        if (!w.nodes) return
+        if (!w?.nodes) return
         const f = filesStore.deepFind(w.nodes, id, true)
         // @ts-ignore
         f?.handle.remove()
@@ -104,13 +104,13 @@ export const save = async (fileId?: string) => {
     const blob = new Blob([f.wipContent], {
         type: "text/markdown"
     })
-    await fileSave(blob, {}, f.blob.handle)
+    await fileSave(blob, {}, f.blob?.handle)
 };
 
 export const copy = async () => {
     toast.promise(
         navigator.clipboard.writeText(
-            filesStore.currentFile$.value.wipContent,
+            filesStore.currentFile$.value?.wipContent ?? "",
         ),
         {
             success: "Copied to clipboard",

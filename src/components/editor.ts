@@ -1,118 +1,42 @@
-import {
-    AdmonitionDirectiveDescriptor,
-    BlockTypeSelect,
-    BoldItalicUnderlineToggles,
-    codeBlockPlugin,
-    CodeMirrorEditor,
-    codeMirrorPlugin,
-    CodeToggle,
-    CreateLink,
-    directivesPlugin,
-    frontmatterPlugin,
-    headingsPlugin,
-    imagePlugin,
-    InsertAdmonition,
-    InsertCodeBlock,
-    InsertFrontmatter,
-    InsertImage,
-    InsertTable,
-    InsertThematicBreak,
-    linkDialogPlugin,
-    linkPlugin,
-    listsPlugin,
-    ListsToggle,
-    markdownShortcutPlugin,
-    MDXEditor,
-    MDXEditorMethods,
-    quotePlugin,
-    tablePlugin,
-    thematicBreakPlugin,
-    toolbarPlugin,
-    UndoRedo,
-} from "@mdxeditor/editor";
-import { Fragment as Frag, h } from "preact";
-import "@mdxeditor/editor/style.css";
-import "./editor.css"
 import "../styles/toast-editor.css";
 import { effect, signal } from "@preact/signals";
-import { useRef } from "preact/hooks";
+import { useEffect, useRef } from "preact/hooks";
 import * as fileActions from "../actions/files";
 import * as fileStore from "../stores/files";
-import { h_ } from "../utils/preact";
-import { nanoid } from "nanoid";
-import { fileSave } from "browser-fs-access";
-import { mermaidCMPlugins, MermaidCodeEditorDescriptor } from "./plugins/mermaid-plugin";
-
-const plugins = [
-    headingsPlugin(),
-    directivesPlugin({ directiveDescriptors: [AdmonitionDirectiveDescriptor] }),
-    frontmatterPlugin(),
-    linkPlugin(),
-    linkDialogPlugin(),
-    listsPlugin(),
-    codeBlockPlugin({
-        defaultCodeBlockLanguage: 'js',
-        codeBlockEditorDescriptors: [
-            MermaidCodeEditorDescriptor,
-            {
-                priority: 2,
-                match: (lang) => lang !== "mermaid" && lang !== "mmd",
-                Editor: CodeMirrorEditor
-            }
-        ],
-    }),
-    codeMirrorPlugin({
-        codeMirrorExtensions: [...mermaidCMPlugins],
-        codeBlockLanguages: {
-            ts: "TypeScript",
-            js: 'JavaScript',
-            css: 'CSS',
-            sql: "SQL",
-            yaml: "YAML",
-            go: "GO",
-            mmd: "Mermaid",
-        }
-    }),
-    quotePlugin(),
-    markdownShortcutPlugin(),
-    tablePlugin(),
-    thematicBreakPlugin(),
-    imagePlugin({
-        async imageUploadHandler(image: File) {
-            let fileName = "pasted-image-" + nanoid();
-            if (image.type) {
-                const { default: mime } = await import("mime")
-                const ext = mime.getExtension(image.type)
-                if (ext) fileName += `.${ext}`
-            }
-            await fileSave(image, {
-                fileName
-            })
-            return URL.createObjectURL(image)
-        }
-    }),
-
-    toolbarPlugin({
-        toolbarContents: () => h_(Frag,
-            h_(UndoRedo),
-            h_(BoldItalicUnderlineToggles),
-            h_(BlockTypeSelect),
-            h_(CreateLink),
-            h_(CodeToggle),
-            h_(InsertThematicBreak),
-            h_(ListsToggle),
-            h_(InsertTable),
-            h_(InsertFrontmatter),
-            h_(InsertAdmonition),
-            h_(InsertCodeBlock),
-            h_(InsertImage)
-        ),
-    }),
-];
+import { defineOptions, ink, Instance } from 'ink-mde'
+import "./editor.css"
+import { h } from "../utils/preact";
 
 export default function Editor() {
-    const id = signal<string | null>(fileStore.currentFile$.value?.id);
-    const editorRef = useRef<MDXEditorMethods | null>(null);
+    const file = fileStore.currentFile$.value
+    const id = signal<string | null>(file?.id ?? null);
+    const containerRef = useRef<HTMLDivElement | null>(null)
+    const editorRef = useRef<Instance | null>(null);
+
+    useEffect(() => {
+        const containerEl = containerRef.current
+        if (!containerEl) return
+        const options = defineOptions({
+            doc: file?.wipContent ?? "",
+            interface: {
+                toolbar: true,
+                images: true,
+                attribution: false,
+            },
+            hooks: {
+                afterUpdate: (doc: string) => {
+                    if (!id.value) return
+                    fileActions.updateFile(id.value, doc);
+                },
+            },
+        })
+        ink(containerEl, options).then((inst) => {
+            editorRef.current = inst
+        })
+        return () => {
+            editorRef.current?.destroy()
+        }
+    }, [])
 
     effect(() => {
         if (!fileStore.currentFile$.value) {
@@ -124,52 +48,16 @@ export default function Editor() {
             }
         } else if (fileStore.currentFile$.value.id !== id.value) {
             const { wipContent } = fileStore.currentFile$.value;
-            editorRef.current?.setMarkdown(wipContent);
+            editorRef.current?.update(wipContent);
             id.value = fileStore.currentFile$.value.id;
         }
     });
 
     return h("div", {
-        style: {
-            position: "relative",
-            flexGrow: 1,
-            flexShrink: 1,
-        }
+        className: "chillmd-editor-container"
     },
         h("div", {
-            style: {
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                overflow: "auto",
-            },
-            tabIndex: -1,
-            onClick: (e) => {
-                // Skip when items inside editor are clicked - because it interferes with functionality of
-                // some built in components
-                if (e.target instanceof Node)
-                    for (const tbar of [...document.querySelectorAll('.mdxeditor')]) {
-                        if (tbar.contains(e.target)) return;
-                    }
-                editorRef.current?.focus()
-            }
-        },
-            h("div", {
-                style: {
-                    position: "relative",
-                    height: "100%",
-                    width: "100%",
-                },
-            },
-                h(MDXEditor, {
-                    ref: editorRef,
-                    markdown: fileStore.currentFile$.value?.wipContent ?? "",
-                    plugins,
-                    onChange: (md) => {
-                        fileActions.updateFile(fileStore.currentFile$.value.id, md)
-                    },
-                })),
-        ));
+            className: "chillmd-editor-inner",
+            ref: containerRef,
+        }));
 }

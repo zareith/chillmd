@@ -1,12 +1,100 @@
-.mdxeditor-toolbar {
-    padding: 5px;
-    border-radius: 0;
+.chillmd-editor-container {
+    overflow: auto;
+    position: relative;
+    flex-grow: 1;
+    flex-shrink: 1;
 }
 
-.mdxeditor-root-contenteditable {
+.chillmd-editor-inner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    font-size: 1rem;
+    --ink-syntax-heading-font-size: 1em;
+    --ink-syntax-heading1-font-size: 1.6em;
+    --ink-syntax-heading2-font-size: 1.5em;
+    --ink-syntax-heading3-font-size: 1.4em;
+    --ink-syntax-heading4-font-size: 1.3em;
+    --ink-syntax-heading5-font-size: 1.2em;
+    --ink-syntax-heading6-font-size: 1.1em;
+
+    --ink-syntax-heading1-font-weight: 600;
+    --ink-syntax-heading2-font-weight: 600;
+    --ink-syntax-heading3-font-weight: 600;
+    --ink-syntax-heading4-font-weight: 600;
+    --ink-syntax-heading5-font-weight: 600;
+    --ink-syntax-heading6-font-weight: 600;
+}
+
+.chillmd-editor-inner.-preview {
+    padding: 0.5rem;
+}
+
+.ink-mde-toolbar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+}
+
+.ink-mde-editor {
+    margin: 35px auto;
+
+}
+
+.chillmd-editor-inner.-preview {
+    margin: 10px auto;
+}
+
+.ink-mde-editor,
+.chillmd-editor-inner.-preview {
     max-width: 800px;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 50px;
-    margin-bottom: 50px;
+    width: 100%;
+}
+
+.chillmd-editor-inner.-preview h1 {
+    font-size: var(--ink-syntax-heading1-font-size);
+    font-weight: var(--ink-syntax-heading1-font-weight);
+}
+
+.chillmd-editor-inner.-preview h2 {
+    font-size: var(--ink-syntax-heading2-font-size);
+    font-weight: var(--ink-syntax-heading2-font-weight);
+}
+
+.chillmd-editor-inner.-preview h3 {
+    font-size: var(--ink-syntax-heading3-font-size);
+    font-weight: var(--ink-syntax-heading3-font-weight);
+}
+
+.chillmd-editor-inner.-preview h4 {
+    font-size: var(--ink-syntax-heading4-font-size);
+    font-weight: var(--ink-syntax-heading4-font-weight);
+}
+
+.chillmd-editor-inner.-preview h5 {
+    font-size: var(--ink-syntax-heading5-font-size);
+    font-weight: var(--ink-syntax-heading5-font-weight);
+}
+
+.chillmd-editor-inner.-preview h6 {
+    font-size: var(--ink-syntax-heading6-font-size);
+    font-weight: var(--ink-syntax-heading6-font-weight);
+}
+
+
+.ink-mde {
+    border: none !important;
+}
+
+.ink-mde-container {
+    outline: 0 !important;
+}
+
+.ink-mde .ink-mde-toolbar .ink-button {
+    height: 1.8rem !important;
+    width: 1.8rem !important;
 }

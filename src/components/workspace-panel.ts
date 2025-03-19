@@ -16,6 +16,7 @@ import "./workspace-panel.css"
 import { useLayoutEffect, useRef } from "preact/hooks";
 import * as fileActions from "../actions/files";
 import { deepFind, FSTreeNode, workspace$ } from "../stores/files";
+import { VNode } from "preact";
 
 
 export default function WorkspacePanel() {
@@ -30,14 +31,16 @@ export default function WorkspacePanel() {
 
     useLayoutEffect(() => {
         const bounds = containerRef.current?.getBoundingClientRect();
+        if (!bounds) return
         treeH$.value = bounds.height
     })
 
     const createNode = async (name: string, type: "file" | "dir") => {
+        if (!workspace$.value) return;
         let parentDir = selectedNode$.value?.dir?.handle ?? workspace$.value?.dir
         if (!parentDir) return
         const id = nanoid();
-        let nextHandle: FileSystemHandle;
+        let nextHandle: FileSystemHandle | null = null;
         if (type === "file") {
             nextHandle = await parentDir.getFileHandle(name, {
                 create: true
@@ -47,8 +50,9 @@ export default function WorkspacePanel() {
                 create: true
             })
         }
+        if (!nextHandle) return;
         const parentId = selectedNode$.value?.dir?.id
-        const roots = workspace$.value.nodes
+        const roots = workspace$.value?.nodes ?? []
         const node = parentId ? deepFind(roots, parentId) : null
         const children = node ? (node.children ??= []) : roots
         children.push({
@@ -99,7 +103,7 @@ export default function WorkspacePanel() {
                     className: "chillmd-ws-header"
                 },
                     h("div", { className: "chillmd-ws-title" },
-                        workspace$.value.dir.name),
+                        workspace$.value?.dir.name),
                     h(Whisper, {
                         ref: newFileTriggerRef,
                         placement: "bottom",
@@ -107,10 +111,10 @@ export default function WorkspacePanel() {
                         speaker: h(NewNodePopup, {
                             title: "New File",
                             onSubmit: (name: string) => {
-                                newFileTriggerRef.current.close();
+                                newFileTriggerRef.current?.close();
                                 createNode(name, "file")
                             }
-                        }),
+                        }) as VNode<{}>,
                         children: h(IconButton, {
                             appearance: "subtle",
                             icon: h_(FiFilePlus),
@@ -123,10 +127,10 @@ export default function WorkspacePanel() {
                         speaker: h(NewNodePopup, {
                             title: "New Folder",
                             onSubmit: (name: string) => {
-                                newFolderTriggerRef.current.close();
+                                newFolderTriggerRef.current?.close();
                                 createNode(name, "dir")
                             }
-                        }),
+                        }) as VNode<{}>,
                         children: h(IconButton, {
                             appearance: "subtle",
                             icon: h_(FiFolderPlus)
@@ -136,7 +140,7 @@ export default function WorkspacePanel() {
 
                 treeH$.value
                     ? h(Tree, {
-                        data: workspace$.value.nodes ?? [],
+                        data: workspace$.value?.nodes ?? [],
                         showIndentLine: true,
                         key: treeKey$.value,
                         getChildren,
@@ -212,7 +216,7 @@ const getChildren = async (node: TreeNode) => {
     if (fsNode.handle.kind === "directory") {
         return (fsNode.children = await getNodesForDir(fsNode.id, fsNode.handle as FileSystemDirectoryHandle))
     }
-    return null;
+    return [];
 }
 
 const getNodesForDir = async (
@@ -236,7 +240,7 @@ const getNodesForDir = async (
                 id: parentId,
                 handle: dir
             } : undefined,
-            children: value.kind === "directory" ? [] : null
+            children: value.kind === "directory" ? [] : undefined
         })
     }
 

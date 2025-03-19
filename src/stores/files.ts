@@ -1,5 +1,6 @@
 import { computed, signal } from "@preact/signals";
 import { FileWithHandle } from "browser-fs-access";
+import { produce } from "immer";
 import { TreeNode } from "rsuite/esm/internals/Tree/types";
 
 export interface FSTreeNode extends TreeNode {
@@ -30,12 +31,22 @@ export const deepFind = (nodes: FSTreeNode[], id: string, pull = false): FSTreeN
     return null
 }
 
-export const openFiles$ = signal<{
+interface FileState {
     id: string;
     name: string;
     blob?: FileWithHandle
     wipContent: string
+    previewing?: boolean
     isOpen: boolean
-}[]>([]);
+}
 
-export const currentFile$ = computed(() => openFiles$.value.find(_ => _.isOpen));
+export const openFiles$ = signal<FileState[]>([]);
+
+export const currentFile$ = computed((): FileState | null => openFiles$.value?.find(_ => _.isOpen) ?? null);
+
+export const updateCurrent = (update: (s: FileState) => void): void => {
+    openFiles$.value = openFiles$.value.map(f => {
+        if (!f.isOpen) return f;
+        return produce(f, update)
+    })
+}

@@ -5,7 +5,7 @@ import { Header } from "rsuite"
 import MenuBar from "./menu-bar"
 import { useLocalStorage } from "react-use";
 import IntroModal from "./intro-modal"
-import { ToastContainer } from 'react-toastify';
+import { ToastContainer, ToastContainerProps } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import SideNav from './side-nav';
 import { FlexColS, FlexRowS } from './flex';
@@ -77,7 +77,7 @@ export default function App() {
             onClose: () => setDismissIntro(true)
         }),
 
-        h_(ToastContainer))
+        h(ToastContainer, {} as ToastContainerProps))
 }
 
 const s = S.create({

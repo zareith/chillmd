@@ -9,4 +9,4 @@ import { bindKbd } from "./utils/events";
 bindKbd(["ctrl+s", "command+s"], fileActions.save);
 bindKbd(["ctrl+o", "command+o"], fileActions.openFile);
 
-render(h(App, {}), document.getElementById("app"));
+render(h(App, {}), document.getElementById("app")!);
