@@ -60,10 +60,7 @@ export default function Editor() {
     return h("div", {
         className: "chillmd-editor-container",
         tabIndex: -1,
-        onClick: handleContainerClick
-    },
-        h("div", {
-            className: "chillmd-editor-inner",
-            ref: containerRef,
-        }));
+        onClick: handleContainerClick,
+        ref: containerRef,
+    });
 }

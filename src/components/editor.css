@@ -1,16 +1,16 @@
 .chillmd-editor-container {
-    overflow: auto;
     position: relative;
     flex-grow: 1;
     flex-shrink: 1;
 }
 
-.chillmd-editor-inner {
+.chillmd-preview-container, .ink-mde-editor {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
+    overflow: auto;
 
     font-size: 1rem;
     --ink-syntax-heading-font-size: 1em;
@@ -29,7 +29,7 @@
     --ink-syntax-heading6-font-weight: 600;
 }
 
-.chillmd-editor-inner.-preview {
+.chillmd-editor-preview {
     padding: 0.5rem;
 }
 
@@ -38,49 +38,47 @@
     left: 0;
     right: 0;
     top: 0;
+    z-index: 2;
 }
 
-.ink-mde-editor {
-    margin: 35px auto;
-
-}
-
-.chillmd-editor-inner.-preview {
+.chillmd-editor-preview {
     margin: 10px auto;
 }
 
-.ink-mde-editor,
-.chillmd-editor-inner.-preview {
+.ink-mde-editor .cm-editor,
+.chillmd-editor-preview {
+    z-index: 1;
     max-width: 800px;
     width: 100%;
+    margin: 35px auto;
 }
 
-.chillmd-editor-inner.-preview h1 {
+.chillmd-editor-inner-preview h1 {
     font-size: var(--ink-syntax-heading1-font-size);
     font-weight: var(--ink-syntax-heading1-font-weight);
 }
 
-.chillmd-editor-inner.-preview h2 {
+.chillmd-editor-inner-preview h2 {
     font-size: var(--ink-syntax-heading2-font-size);
     font-weight: var(--ink-syntax-heading2-font-weight);
 }
 
-.chillmd-editor-inner.-preview h3 {
+.chillmd-editor-inner-preview h3 {
     font-size: var(--ink-syntax-heading3-font-size);
     font-weight: var(--ink-syntax-heading3-font-weight);
 }
 
-.chillmd-editor-inner.-preview h4 {
+.chillmd-editor-inner-preview h4 {
     font-size: var(--ink-syntax-heading4-font-size);
     font-weight: var(--ink-syntax-heading4-font-weight);
 }
 
-.chillmd-editor-inner.-preview h5 {
+.chillmd-editor-inner-preview h5 {
     font-size: var(--ink-syntax-heading5-font-size);
     font-weight: var(--ink-syntax-heading5-font-weight);
 }
 
-.chillmd-editor-inner.-preview h6 {
+.chillmd-editor-inner-preview h6 {
     font-size: var(--ink-syntax-heading6-font-size);
     font-weight: var(--ink-syntax-heading6-font-weight);
 }

@@ -23,8 +23,11 @@ export default function Preview() {
         className: "chillmd-editor-container"
     },
         h("div", {
-            className: "chillmd-editor-inner -preview",
-            ref: containerRef,
-        }));
+            className: "chillmd-preview-container"
+        },
+            h("div", {
+                className: "chillmd-editor-preview",
+                ref: containerRef,
+            })));
 
 }
