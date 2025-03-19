@@ -53,8 +53,14 @@ export default function Editor() {
         }
     });
 
+    const handleContainerClick = () => {
+        editorRef.current?.focus();
+    }
+
     return h("div", {
-        className: "chillmd-editor-container"
+        className: "chillmd-editor-container",
+        tabIndex: -1,
+        onClick: handleContainerClick
     },
         h("div", {
             className: "chillmd-editor-inner",
