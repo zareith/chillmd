@@ -1,1 +1,0 @@
-import{d as e,Q as a,a as s,c as n,W as c}from"./index-CCfa309r.js";const r=o=>{const[i,t]=e(a(c.completion,o));return[s({defaultKeymap:!0,icons:!1,override:t,optionClass:()=>"ink-tooltip-option"}),n()]};export{r as autocomplete};
