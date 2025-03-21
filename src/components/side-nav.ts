@@ -10,11 +10,13 @@ import { toggleN } from '../utils/bool';
 import WorkspacePanel from './workspace-panel';
 import "./side-nav.css"
 import { FlexRowS } from './flex';
-import { update } from "../utils/immer";
+import { useAtom } from "jotai";
 
 export default function SideNav() {
+    const [layout, setLayout] = useAtom(layout$)
+
     return h(FlexRowS, {
-        className: `chillmd-side-nav-container ${layout$.value.openSidebar ? "-expanded" : ""}`
+        className: `chillmd-side-nav-container ${layout.openSidebar ? "-expanded" : ""}`
     },
         h("div", {
             className: "chillmd-side-nav"
@@ -25,7 +27,7 @@ export default function SideNav() {
                     as: MdDashboard,
                 }),
                 onClick: () => {
-                    update(layout$, v => {
+                    setLayout(v => {
                         v.openSidebar = toggleN("WORKSPACE", v.openSidebar)
                     })
                 }
@@ -36,13 +38,13 @@ export default function SideNav() {
                     as: MdSettings,
                 }),
                 onClick: () => {
-                    update(layout$, v => {
+                    setLayout(v => {
                         v.openSidebar = toggleN("SETTINGS", v.openSidebar)
                     })
                 }
             })),
 
-        layout$.value.openSidebar && h("div", {
+        layout.openSidebar && h("div", {
             className: "chillmd-side-nav-expanded"
         },
             h_(WorkspacePanel))

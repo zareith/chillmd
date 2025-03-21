@@ -2,9 +2,7 @@ import { FiFilePlus } from "react-icons/fi";
 import { sortBy } from "remeda"
 import { FiCheck } from "react-icons/fi";
 import { FiFolderPlus } from "react-icons/fi";
-import { nanoid } from "nanoid"
 import { Dropdown, IconButton, Whisper, Popover, Input, InputGroup, WhisperInstance } from 'rsuite';
-import { useComputed, useSignal } from "@preact/signals";
 import { h, h_ } from "../utils/preact";
 import { Button, Tree, useToaster } from "rsuite";
 import { FlexColC, FlexRowC } from "./flex";
@@ -13,33 +11,32 @@ import { TreeNode } from "rsuite/esm/internals/Tree/types";
 import FolderFillIcon from '@rsuite/icons/FolderFill';
 import PageIcon from '@rsuite/icons/Page';
 import "./workspace-panel.css"
-import { useLayoutEffect, useRef } from "preact/hooks";
+import { useLayoutEffect, useRef, useState } from "preact/hooks";
 import * as fileActions from "../actions/files";
 import { deepFind, FSTreeNode, workspace$ } from "../stores/files";
 import { VNode } from "preact";
-
+import { useAtom } from "jotai";
 
 export default function WorkspacePanel() {
-    const isCreating$ = useComputed(() => !workspace$.value)
+    const [workspace, setWorkspace] = useAtom(workspace$)
+    const isCreating = !workspace
     const toaster = useToaster();
     const containerRef = useRef<HTMLDivElement | null>(null);
-    const treeH$ = useSignal(0)
-    const treeKey$ = useSignal(nanoid())
-    const selectedNode$ = useSignal<FSTreeNode | null>(null)
+    const [treeH, setTreeH] = useState(0)
+    const [selectedNode, setSelectedNode] = useState<FSTreeNode | null>(null)
     const newFileTriggerRef = useRef<WhisperInstance>(null)
     const newFolderTriggerRef = useRef<WhisperInstance>(null)
 
     useLayoutEffect(() => {
         const bounds = containerRef.current?.getBoundingClientRect();
         if (!bounds) return
-        treeH$.value = bounds.height
+        setTreeH(bounds.height)
     })
 
     const createNode = async (name: string, type: "file" | "dir") => {
-        if (!workspace$.value) return;
-        let parentDir = selectedNode$.value?.dir?.handle ?? workspace$.value?.dir
+        if (!workspace) return;
+        let parentDir = selectedNode?.dir?.handle ?? workspace?.dir
         if (!parentDir) return
-        const id = nanoid();
         let nextHandle: FileSystemHandle | null = null;
         if (type === "file") {
             nextHandle = await parentDir.getFileHandle(name, {
@@ -51,32 +48,36 @@ export default function WorkspacePanel() {
             })
         }
         if (!nextHandle) return;
-        const parentId = selectedNode$.value?.dir?.id
-        const roots = workspace$.value?.nodes ?? []
-        const node = parentId ? deepFind(roots, parentId) : null
+        const pathArr = selectedNode?.path?.split("/")
+        let parentPath = pathArr?.slice(0, -1);
+        const roots = workspace?.nodes ?? []
+        const node = parentPath
+            ? deepFind(parentPath)
+            : null
         const children = node ? (node.children ??= []) : roots
         children.push({
-            id,
+            path: selectedNode?.path
+                ? `${selectedNode.path}/${name}`
+                : name,
+            name,
             label: name,
             value: name,
             handle: nextHandle,
-            dir: parentId ? {
-                id: parentId,
+            dir: parentDir ? {
                 handle: parentDir
             } : undefined,
             children: type === "dir" ? [] : undefined
         })
-        workspace$.value = {
-            ...workspace$.value,
-            nodes: [...roots],
-        }
+        setWorkspace(w => {
+            if (w) w.nodes = [...roots]
+        })
     }
 
     return h("div", {
         className: "chillmd-ws-panel",
         ref: containerRef,
     },
-        isCreating$.value ?
+        isCreating ?
             h(FlexColC, {
                 style: {
                     padding: "10px"
@@ -89,7 +90,7 @@ export default function WorkspacePanel() {
                         withToaster(async () => {
                             const dir = await window.showDirectoryPicker();
                             const nodes = await getNodesForDir(undefined, dir);
-                            workspace$.value = { dir, nodes }
+                            setWorkspace({ dir, nodes })
                         }, {
                             toaster
                         })
@@ -102,8 +103,10 @@ export default function WorkspacePanel() {
                 h("div", {
                     className: "chillmd-ws-header"
                 },
-                    h("div", { className: "chillmd-ws-title" },
-                        workspace$.value?.dir.name),
+                    h("div", {
+                        className: "chillmd-ws-title"
+                    },
+                        workspace?.dir.name),
                     h(Whisper, {
                         ref: newFileTriggerRef,
                         placement: "bottom",
@@ -138,13 +141,12 @@ export default function WorkspacePanel() {
                     }),
                 ),
 
-                treeH$.value
+                treeH
                     ? h(Tree, {
-                        data: workspace$.value?.nodes ?? [],
+                        data: workspace?.nodes ?? [],
                         showIndentLine: true,
-                        key: treeKey$.value,
                         getChildren,
-                        height: treeH$.value,
+                        height: treeH,
                         renderTreeNode: node => {
                             const fsNode = node as FSTreeNode
                             const fsHandle = fsNode.handle
@@ -165,21 +167,21 @@ export default function WorkspacePanel() {
                                 fsHandle.kind === "file"
                                     ? h(Dropdown.Item, {
                                         onClick: () => {
-                                            fileActions.openFile(fsNode.id)
+                                            fileActions.openFile(fsNode.path)
                                         }
                                     },
                                         "Open")
                                     : null,
                                 h(Dropdown.Item, {
                                     onClick: () => {
-                                        fileActions.deleteFile(fsNode.id)
+                                        fileActions.deleteFile(fsNode.path)
                                     }
                                 },
                                     "Delete"),
                                 fsHandle.kind === "directory"
                                     ? h(Dropdown.Item, {
                                         onClick: () => {
-                                            selectedNode$.value = fsNode
+                                            setSelectedNode(fsNode)
                                             newFileTriggerRef.current?.open()
                                         }
                                     },
@@ -188,7 +190,7 @@ export default function WorkspacePanel() {
                                 fsHandle.kind === "directory"
                                     ? h(Dropdown.Item, {
                                         onClick: () => {
-                                            selectedNode$.value = fsNode
+                                            setSelectedNode(fsNode)
                                             newFolderTriggerRef.current?.open()
                                         }
                                     }, "New Folder")
@@ -196,12 +198,12 @@ export default function WorkspacePanel() {
                         },
                         onSelect: async (node) => {
                             const fsNode = node as FSTreeNode
-                            selectedNode$.value = fsNode
+                            setSelectedNode(fsNode)
                             const fsHandle = fsNode.handle
                             if (fsHandle.kind !== "file") return
                             const fileHandle = fsHandle as FileSystemFileHandle
                             const blob = await fileHandle.getFile()
-                            fileActions.openFile(fsNode.id, Object.assign(blob, {
+                            fileActions.openFile(fsNode.path, Object.assign(blob, {
                                 handle: fileHandle
                             }))
                         },
@@ -214,30 +216,31 @@ const getChildren = async (node: TreeNode) => {
     const fsNode = node as FSTreeNode
     if (fsNode.children?.length) return fsNode.children
     if (fsNode.handle.kind === "directory") {
-        return (fsNode.children = await getNodesForDir(fsNode.id, fsNode.handle as FileSystemDirectoryHandle))
+        return (fsNode.children = await getNodesForDir(fsNode.path, fsNode.handle as FileSystemDirectoryHandle))
     }
     return [];
 }
 
 const getNodesForDir = async (
-    parentId: string | undefined,
+    parentPath: string | undefined,
     dir: FileSystemDirectoryHandle,
 ) => {
     const nodes: FSTreeNode[] = [];
 
     for await (const [key, value] of dir.entries()) {
         if (key.match(/^(\.|_)/)) continue;
-        const id = nanoid();
+        const path = parentPath
+            ? `${parentPath}/${key}`
+            : key;
         nodes.push({
-            id,
+            path,
+            name: key,
             label: key,
             handle: value,
-            value: id,
+            value: path,
             dir: value.kind === "directory" ? {
-                id,
                 handle: value
-            } : parentId ? {
-                id: parentId,
+            } : parentPath ? {
                 handle: dir
             } : undefined,
             children: value.kind === "directory" ? [] : undefined
@@ -251,7 +254,7 @@ const NewNodePopup = (p: {
     title: string
     onSubmit: (name: string) => void
 }) => {
-    const name$ = useSignal("")
+    const [name, setName] = useState("")
 
     return h(Popover, {
         title: p.title,
@@ -260,18 +263,18 @@ const NewNodePopup = (p: {
         h_(InputGroup,
             h(Input, {
                 placeholder: "Name",
-                value: name$.value,
+                value: name,
                 onChange: e => {
-                    name$.value = e
+                    setName(e)
                 },
                 onKeyDown: e => {
                     if (e.key === "Enter") {
-                        p.onSubmit(name$.value)
+                        p.onSubmit(name)
                     }
                 }
             }),
             h(InputGroup.Button, {
-                onClick: () => p.onSubmit(name$.value)
+                onClick: () => p.onSubmit(name)
             },
                 h_(FiCheck))
         ))

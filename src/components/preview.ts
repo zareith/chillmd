@@ -1,23 +1,24 @@
-import { useRef } from "preact/hooks";
+import { useEffect, useRef } from "preact/hooks";
 import * as fileStore from "../stores/files";
-import { useSignalEffect } from "@preact/signals";
 import { h } from "../utils/preact";
 import DOMPurify from "dompurify"
 import { marked } from "marked"
 import "./editor.css"
+import { useAtomValue } from "jotai";
 
 export default function Preview() {
     const containerRef = useRef<HTMLDivElement | null>(null)
+    const currentFile = useAtomValue(fileStore.currentFile$)
 
-    useSignalEffect(() => {
-        const content = fileStore.currentFile$.value?.wipContent ?? "";
+    useEffect(() => {
+        const content = currentFile?.wipContent ?? "";
         Promise.resolve(marked.parse(content))
             .then(_ => DOMPurify.sanitize(_))
             .then(_ => {
                 if (!containerRef.current) return
                 containerRef.current.innerHTML = _
             })
-    })
+    }, [currentFile?.wipContent])
 
     return h("div", {
         className: "chillmd-editor-container"

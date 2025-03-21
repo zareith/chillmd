@@ -1,4 +1,4 @@
-import { signal } from "@preact/signals";
+import { atomWithImmer as atomI } from "jotai-immer";
 
 export type WorkspaceType = "OPFS_LOCAL";
 
@@ -7,4 +7,4 @@ export interface WorkspaceState {
     type: WorkspaceType
 }
 
-export const workspaces$ = signal<WorkspaceState[]>([]);
+export const workspaces$ = atomI<WorkspaceState[]>([]);

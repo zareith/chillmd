@@ -1,4 +1,3 @@
-import { produce } from "immer";
 import { toast } from "react-toastify";
 import * as filesStore from "../stores/files";
 import {
@@ -7,23 +6,26 @@ import {
     FileWithHandle,
 } from 'browser-fs-access';
 import { nanoid } from "nanoid";
-import { update } from "../utils/immer";
+import format from "date-fns/format";
+import { store } from "../stores/store";
+
+export const extensions = [".markdown", ".md", ".txt", ".text"];
 
 export const openFile = async (id?: string, blob?: FileWithHandle) => {
     id ??= nanoid();
     blob ??= await fileOpen({
-        extensions: [".markdown", ".md", ".txt", ".text"],
+        extensions,
         mimeTypes: ["text/*"]
     })
     const wipContent = await blob.text()
-    update(filesStore.openFiles$, draft => {
+    store.set(filesStore.openFiles$, draft => {
         let didFind = false;
         draft.forEach(_ => {
-            _.isOpen = _.id === id;
+            _.isOpen = _.path === id;
             if (_.isOpen) didFind = true;
         })
         if (!didFind) draft.push({
-            id,
+            path: id,
             blob,
             name: blob.name,
             isOpen: true,
@@ -33,73 +35,79 @@ export const openFile = async (id?: string, blob?: FileWithHandle) => {
 };
 
 export const openNewFile = () => {
-    const id = nanoid()
-    update(filesStore.openFiles$, draft => {
+    let name = `${format(new Date(), 'yyyy-MM-dd')}.md`
+    if (store.get(filesStore.openFiles$)?.find(_ => _.name === name)) {
+        name = name.replace(/\.md$/, `-${+new Date()}.md`)
+    }
+    store.set(filesStore.openFiles$, draft => {
         draft.forEach(_ => {
             _.isOpen = false;
         })
         draft.push({
-            id,
-            name: "Untitled",
+            path: name,
+            name: name,
             isOpen: true,
             wipContent: "",
         });
     });
-    return id
+    return name;
 }
 
-export const closeFile = async (id: string) => {
-    filesStore.openFiles$.value = filesStore.openFiles$.value.filter(f =>
-        f.id !== id
-    )
+export const closeFile = async (path: string) => {
+    store.set(filesStore.openFiles$, draft => {
+        const idx = draft.findIndex(f => f.path === path);
+        draft.splice(idx, 1)
+    })
 }
 
-export const deleteFile = async (id: string) => {
-    closeFile(id)
-    update(filesStore.workspace$, w => {
+export const deleteFile = async (path: string) => {
+    closeFile(path)
+    store.set(filesStore.workspace$, w => {
         if (!w?.nodes) return
-        const f = filesStore.deepFind(w.nodes, id, true)
+        const f = filesStore.deepFind(path.split("/"), true, w.nodes)
         // @ts-ignore
         f?.handle.remove()
     })
 }
 
-export const switchFile = async (fileId: string) => {
-    update(filesStore.openFiles$, draft => {
+export const switchFile = async (path: string) => {
+    store.set(filesStore.openFiles$, draft => {
         draft.forEach(_ => {
-            _.isOpen = _.id === fileId
+            _.isOpen = _.path === path
         })
     });
 }
 
-export const updateFile = async (fileId: string, content: string) => {
+export const updateFile = async (path: string, content: string) => {
     let shouldAutoSave = false;
-    update(filesStore.openFiles$, draft => {
+    store.set(filesStore.openFiles$, draft => {
         for (const f of draft) {
-            if (f.id === fileId) {
+            if (f.path === path) {
+                if (f.blob?.handle && f.wipContent !== content)
+                    shouldAutoSave = true;
                 f.wipContent = content
             }
-            if (f.blob?.handle) shouldAutoSave = true;
         }
     })
     if (shouldAutoSave)
-        scheduleSave(fileId)
+        scheduleSave(path)
 }
 
 const saveTimeouts: Record<string, any> = {}
 
-const scheduleSave = (fileId: string) => {
-    if (saveTimeouts[fileId]) return;
-    saveTimeouts[fileId] = setTimeout(() => {
-        saveTimeouts[fileId] = undefined
-        save(fileId)
+const scheduleSave = (path: string) => {
+    if (saveTimeouts[path])
+        return; // anyways going to get saved
+    saveTimeouts[path] = setTimeout(() => {
+        saveTimeouts[path] = undefined
+        save(path)
     }, 500);
 }
 
 export const save = async (fileId?: string) => {
     const f = fileId
-        ? filesStore.openFiles$.value.find(_ => _.id === fileId)
-        : filesStore.currentFile$.value
+        ? store.get(filesStore.openFiles$).find(_ => _.path === fileId)
+        : store.get(filesStore.currentFile$)
     if (!f) return
     const blob = new Blob([f.wipContent], {
         type: "text/markdown"
@@ -110,7 +118,7 @@ export const save = async (fileId?: string) => {
 export const copy = async () => {
     toast.promise(
         navigator.clipboard.writeText(
-            filesStore.currentFile$.value?.wipContent ?? "",
+            store.get(filesStore.currentFile$)?.wipContent ?? "",
         ),
         {
             success: "Copied to clipboard",

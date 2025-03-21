@@ -1,5 +1,5 @@
-import { signal } from "@preact/signals";
 import { MaybeN } from "../utils/types";
+import { atomWithImmer as atomI } from "jotai-immer";
 
 export type SidebarType = "WORKSPACE" | "SEARCH" | "SETTINGS";
 
@@ -20,6 +20,6 @@ export interface TabState {
   orientation: MaybeN<OrientationType>
 }
 
-export const layout$ = signal<LayoutState>({
+export const layout$ = atomI<LayoutState>({
   tabs: [],
 });

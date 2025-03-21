@@ -13,22 +13,28 @@ import EditorGroup from './editor-group';
 import "../styles/resizer.css"
 import { layout$ } from '../stores/ui'
 import { useLayoutWide } from '../hooks/use-is-wide'
-import { useSignal, useSignalEffect } from '@preact/signals'
+import { Provider, useAtomValue } from 'jotai'
+import { useEffect, useState } from 'preact/hooks'
+import { store } from '../stores/store'
 
 export default function App() {
     const [didDismissIntro, setDismissIntro] =
         // useState(false);
         useLocalStorage("chillmd:feat:intro", false)
     const isWide = useLayoutWide();
-    const splitSize$ = useSignal(40);
+    const [splitSize, setSplitSize] = useState(40);
+    const layout = useAtomValue(layout$)
 
-    useSignalEffect(() => {
-        if (layout$.value.openSidebar) {
-            splitSize$.value = 300;
+    console.log('layout:', layout)
+
+    useEffect(() => {
+        debugger
+        if (layout.openSidebar) {
+            setSplitSize(300);
         } else {
-            splitSize$.value = 40;
+            setSplitSize(40);
         }
-    });
+    }, [layout.openSidebar]);
 
     return h(FlexColS, { ...S.props(s.container) },
         h_(Header,
@@ -48,13 +54,13 @@ export default function App() {
                 h(SplitPane, {
                     split: "vertical",
                     minSize: 40,
-                    allowResize: !!layout$.value.openSidebar,
-                    maxSize: layout$.value.openSidebar
+                    allowResize: !!layout.openSidebar,
+                    maxSize: layout.openSidebar
                         ? 500
                         : 40,
-                    size: splitSize$.value,
+                    size: splitSize,
                     onChange: (newSize) => {
-                        splitSize$.value = newSize
+                        setSplitSize(newSize)
                     }
                 },
                     h_(SideNav),
@@ -69,7 +75,7 @@ export default function App() {
                     }
                 },
                     h_(SideNav),
-                    layout$.value.openSidebar
+                    layout.openSidebar
                         ? null
                         : h_(EditorGroup))),
 

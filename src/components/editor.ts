@@ -1,57 +1,53 @@
 import "../styles/toast-editor.css";
-import { effect, signal } from "@preact/signals";
-import { useEffect, useRef } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import * as fileActions from "../actions/files";
 import * as fileStore from "../stores/files";
 import { defineOptions, ink, Instance } from 'ink-mde'
 import "./editor.css"
 import { h } from "../utils/preact";
+import { useAtomValue } from "jotai";
 
 export default function Editor() {
-    const file = fileStore.currentFile$.value
-    const id = signal<string | null>(file?.id ?? null);
+    const curFile = useAtomValue(fileStore.currentFile$);
+    const [curPath, setCurPath] = useState<string | null>(curFile?.path ?? null);
     const containerRef = useRef<HTMLDivElement | null>(null)
     const editorRef = useRef<Instance | null>(null);
+    const openFiles = useAtomValue(fileStore.openFiles$)
 
     useEffect(() => {
-        const containerEl = containerRef.current
-        if (!containerEl) return
-        const options = defineOptions({
-            doc: file?.wipContent ?? "",
-            interface: {
-                toolbar: true,
-                images: true,
-                attribution: false,
-            },
-            hooks: {
-                afterUpdate: (doc: string) => {
-                    if (!id.value) return
-                    fileActions.updateFile(id.value, doc);
-                },
-            },
-        })
-        ink(containerEl, options).then((inst) => {
-            editorRef.current = inst
-        })
+        const expectedPath = curFile?.path
+        if (!expectedPath) {
+            let nextPath = openFiles[0]?.path
+            if (!nextPath) nextPath = fileActions.openNewFile()
+            fileActions.switchFile(nextPath)
+        } else if (curFile && (expectedPath !== curPath || !editorRef.current)) {
+            const containerEl = containerRef.current
+            if (containerEl) {
+                const options = defineOptions({
+                    doc: curFile?.wipContent ?? "",
+                    interface: {
+                        toolbar: true,
+                        images: true,
+                        attribution: false,
+                    },
+                    hooks: {
+                        afterUpdate: (doc: string) => {
+                            fileActions.updateFile(curFile.path, doc);
+                        },
+                    },
+                })
+                console.log("Creating editor for", curFile.path)
+                setCurPath(curFile.path)
+                ink(containerEl, options).then((inst) => {
+                    console.log("Created editor for", curFile.path)
+                    editorRef.current = inst
+                })
+            }
+        }
         return () => {
             editorRef.current?.destroy()
         }
-    }, [])
-
-    effect(() => {
-        if (!fileStore.currentFile$.value) {
-            const firstId = fileStore.openFiles$.value[0]?.id
-            if (firstId) fileActions.switchFile(firstId)
-            else {
-                const newId = fileActions.openNewFile();
-                id.value = newId;
-            }
-        } else if (fileStore.currentFile$.value.id !== id.value) {
-            const { wipContent } = fileStore.currentFile$.value;
-            editorRef.current?.update(wipContent);
-            id.value = fileStore.currentFile$.value.id;
-        }
-    });
+    }, [curFile?.path])
 
     const handleContainerClick = () => {
         editorRef.current?.focus();

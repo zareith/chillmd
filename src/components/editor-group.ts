@@ -8,9 +8,11 @@ import { FlexColS, FlexRowC } from "./flex";
 import "./editor-group.css"
 import { FiX } from "react-icons/fi";
 import Preview from "./preview";
+import { useAtomValue, useSetAtom } from "jotai";
 
 export default function EditorGroup() {
-    const previewing = !!fileStore.currentFile$.value?.previewing
+    const curFile = useAtomValue(fileStore.currentFile$)
+    const previewing = curFile?.previewing
 
     return h(FlexColS, {
         className: "chillmd-ed-group-container"
@@ -23,7 +25,9 @@ export default function EditorGroup() {
 }
 
 function Footer() {
-    const previewing = !!fileStore.currentFile$.value?.previewing
+    const curFile = useAtomValue(fileStore.currentFile$)
+    const setOpenFiles = useSetAtom(fileStore.openFiles$)
+    const previewing = curFile?.previewing
 
     return h(FlexRowC, {
         className: "chillmd-ed-group-footer",
@@ -36,24 +40,31 @@ function Footer() {
         h(Toggle, {
             checked: previewing,
             onChange: (isChecked) => {
-                fileStore.updateCurrent(f => {
-                    f.previewing = isChecked
+                setOpenFiles(files => {
+                    for (const f of files) {
+                        if (f.path === curFile?.path) {
+                            f.previewing = isChecked
+                        }
+                    }
                 })
             }
         }, "Preview"))
 }
 
 function TabStrip() {
-    const isSoloScratchBuffer = fileStore.openFiles$.value?.length === 1 && !fileStore.currentFile$.value?.blob
+    const openFiles = useAtomValue(fileStore.openFiles$)
+    const curFile = useAtomValue(fileStore.currentFile$)
+    const isSoloScratchBuffer = openFiles?.length === 1 && !curFile?.blob
+    const isClosable = !isSoloScratchBuffer
 
     return h(Tabs, {
-        activeKey: fileStore.currentFile$.value?.id,
+        activeKey: curFile?.path,
         appearance: "pills",
         onSelect: (fileId) => fileActions.switchFile("" + fileId)
     },
-        fileStore.openFiles$.value.map((f, idx) => (
+        openFiles.map((f, idx) => (
             h(Tabs.Tab, {
-                eventKey: f.id,
+                eventKey: f.path,
                 title: h(FlexRowC, {
                     style: {
                         gap: 5
@@ -61,10 +72,9 @@ function TabStrip() {
                 },
                     f.name,
 
-                    // Close button
-                    !isSoloScratchBuffer && h(IconButton, {
+                    isClosable && h(IconButton, {
                         onClick: () => {
-                            fileActions.closeFile(f.id)
+                            fileActions.closeFile(f.path)
                         },
                         icon: h_(FiX),
                         size: "xs",
