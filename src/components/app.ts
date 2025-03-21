@@ -11,11 +11,10 @@ import SideNav from './side-nav';
 import { FlexColS, FlexRowS } from './flex';
 import EditorGroup from './editor-group';
 import "../styles/resizer.css"
-import { layout$ } from '../stores/ui'
+import { layout$ } from '../state/ui'
 import { useLayoutWide } from '../hooks/use-is-wide'
-import { Provider, useAtomValue } from 'jotai'
+import { useAtomValue } from 'jotai'
 import { useEffect, useState } from 'preact/hooks'
-import { store } from '../stores/store'
 
 export default function App() {
     const [didDismissIntro, setDismissIntro] =

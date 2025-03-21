@@ -5,7 +5,7 @@ import {
 } from 'react-icons/md';
 import { Icon } from '@rsuite/icons';
 import { Button } from 'rsuite';
-import { layout$ } from '../stores/ui';
+import { layout$ } from '../state/ui';
 import { toggleN } from '../utils/bool';
 import WorkspacePanel from './workspace-panel';
 import "./side-nav.css"

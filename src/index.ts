@@ -7,7 +7,7 @@ import App from "./components/app";
 import * as fileActions from "./actions/files";
 import { bindKbd } from "./utils/events";
 import { Provider } from "jotai/react";
-import { store } from "./stores/store";
+import { store } from "./state/store";
 
 // TODO Fix issues with rsuite tree
 setAutoFreeze(false)

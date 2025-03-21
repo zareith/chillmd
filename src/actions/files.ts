@@ -1,5 +1,5 @@
 import { toast } from "react-toastify";
-import * as filesStore from "../stores/files";
+import * as filesStore from "../state/files";
 import {
     fileOpen,
     fileSave,
@@ -7,7 +7,7 @@ import {
 } from 'browser-fs-access';
 import { nanoid } from "nanoid";
 import format from "date-fns/format";
-import { store } from "../stores/store";
+import { store } from "../state/store";
 
 export const extensions = [".markdown", ".md", ".txt", ".text"];
 

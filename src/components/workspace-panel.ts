@@ -13,7 +13,7 @@ import PageIcon from '@rsuite/icons/Page';
 import "./workspace-panel.css"
 import { useLayoutEffect, useRef, useState } from "preact/hooks";
 import * as fileActions from "../actions/files";
-import { deepFind, FSTreeNode, workspace$ } from "../stores/files";
+import { deepFind, FSTreeNode, workspace$ } from "../state/files";
 import { VNode } from "preact";
 import { useAtom } from "jotai";
 

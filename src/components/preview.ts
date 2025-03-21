@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "preact/hooks";
-import * as fileStore from "../stores/files";
+import * as fileAtoms from "../state/files";
 import { h } from "../utils/preact";
 import DOMPurify from "dompurify"
 import { marked } from "marked"
@@ -8,17 +8,11 @@ import { useAtomValue } from "jotai";
 
 export default function Preview() {
     const containerRef = useRef<HTMLDivElement | null>(null)
-    const currentFile = useAtomValue(fileStore.currentFile$)
-
-    useEffect(() => {
-        const content = currentFile?.wipContent ?? "";
-        Promise.resolve(marked.parse(content))
-            .then(_ => DOMPurify.sanitize(_))
-            .then(_ => {
-                if (!containerRef.current) return
-                containerRef.current.innerHTML = _
-            })
-    }, [currentFile?.wipContent])
+    const currentFile = useAtomValue(fileAtoms.currentFile$)
+    const previews = useAtomValue(fileAtoms.previews$)
+    const preview = currentFile?.path
+        ? previews[currentFile?.path]
+        : null
 
     return h("div", {
         className: "chillmd-editor-container"
@@ -29,6 +23,9 @@ export default function Preview() {
             h("div", {
                 className: "chillmd-editor-preview",
                 ref: containerRef,
+                dangerouslySetInnerHTML: {
+                    __html: preview ?? ""
+                }
             })));
 
 }

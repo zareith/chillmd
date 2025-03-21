@@ -1,7 +1,7 @@
 import Spacer from "./spacer";
 import { Toggle, IconButton, Tabs } from "rsuite";
 import * as fileActions from "../actions/files"
-import * as fileStore from "../stores/files";
+import * as fileStore from "../state/files";
 import { h, h_ } from "../utils/preact";
 import Editor from "./editor";
 import { FlexColS, FlexRowC } from "./flex";

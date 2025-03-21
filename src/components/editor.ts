@@ -1,7 +1,7 @@
 import "../styles/toast-editor.css";
 import { useEffect, useRef, useState } from "preact/hooks";
 import * as fileActions from "../actions/files";
-import * as fileStore from "../stores/files";
+import * as fileStore from "../state/files";
 import { defineOptions, ink, Instance } from 'ink-mde'
 import "./editor.css"
 import { h } from "../utils/preact";

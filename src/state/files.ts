@@ -1,3 +1,5 @@
+import DOMPurify from "dompurify"
+import { marked } from "marked"
 import { atom } from "jotai"
 import { atomWithImmer as atomI } from "jotai-immer";
 import { FileWithHandle } from "browser-fs-access";
@@ -62,3 +64,29 @@ export const updateCurrent = (update: (f: FileState) => void): void => {
         }
     })
 }
+
+interface FilePreview {
+    content: string
+    preview: string
+}
+
+type FilePreviews = Record<string, FilePreview | undefined>
+
+export const previews$ = atom(async (get): Promise<FilePreviews> => {
+    const prev = await get(previews$)
+    const openFiles = get(openFiles$)
+    const next = { ...prev }
+    for (const f of openFiles) {
+        if (f.wipContent === next[f.path]?.content) {
+            continue;
+        }
+        const content = f?.wipContent ?? "";
+        const rendered = await marked.parse(content)
+        const sanitized = DOMPurify.sanitize(rendered)
+        next[f.path] = {
+            content: f.wipContent,
+            preview: sanitized
+        }
+    }
+    return next
+})
