@@ -39,7 +39,12 @@
         "react-toastify": "^10.0.6",
         "react-use": "^17.6.0",
         "remeda": "^2.21.2",
-        "rsuite": "^5.73.1"
+        "rsuite": "^5.73.1",
+        "workbox-build": "^7.3.0",
+        "workbox-core": "^7.3.0",
+        "workbox-precaching": "^7.3.0",
+        "workbox-routing": "^7.3.0",
+        "workbox-strategies": "^7.3.0"
     },
     "devDependencies": {
         "@preact/preset-vite": "^2.9.0",
@@ -54,6 +59,7 @@
         "typescript": "^5.6.3",
         "vite": "^5.3.3",
         "vite-plugin-commonjs": "^0.10.3",
+        "vite-plugin-pwa": "^0.21.1",
         "vite-plugin-stylex-dev": "^0.8.0"
     },
     "eslintConfig": {
