@@ -1,4 +1,5 @@
 import { FiFilePlus } from "react-icons/fi";
+import path from "path-browserify"
 import { sortBy } from "remeda"
 import { FiCheck } from "react-icons/fi";
 import { FiFolderPlus } from "react-icons/fi";
@@ -11,11 +12,13 @@ import { TreeNode } from "rsuite/esm/internals/Tree/types";
 import FolderFillIcon from '@rsuite/icons/FolderFill';
 import PageIcon from '@rsuite/icons/Page';
 import "./workspace-panel.css"
-import { useLayoutEffect, useRef, useState } from "preact/hooks";
+import { useCallback, useLayoutEffect, useRef, useState } from "preact/hooks";
 import * as fileActions from "../actions/files";
 import { deepFind, FSTreeNode, workspace$ } from "../state/files";
 import { VNode } from "preact";
 import { useAtom } from "jotai";
+
+const AllowedFilesRegex = /.(md|markdown)$/i
 
 export default function WorkspacePanel() {
     const [workspace, setWorkspace] = useAtom(workspace$)
@@ -26,6 +29,16 @@ export default function WorkspacePanel() {
     const [selectedNode, setSelectedNode] = useState<FSTreeNode | null>(null)
     const newFileTriggerRef = useRef<WhisperInstance>(null)
     const newFolderTriggerRef = useRef<WhisperInstance>(null)
+
+    const onTriggerNewFile = useCallback((node: FSTreeNode) => {
+        setSelectedNode(node)
+        newFileTriggerRef.current?.open()
+    }, [])
+
+    const onTriggerNewDir = useCallback((node: FSTreeNode) => {
+        setSelectedNode(node)
+        newFolderTriggerRef.current?.open()
+    }, [])
 
     useLayoutEffect(() => {
         const bounds = containerRef.current?.getBoundingClientRect();
@@ -57,8 +70,11 @@ export default function WorkspacePanel() {
         const children = node ? (node.children ??= []) : roots
         children.push({
             path: selectedNode?.path
-                ? `${selectedNode.path}/${name}`
+                ? selectedNode.children // If directory
+                    ? path.join(selectedNode.path, name)
+                    : path.join(path.dirname(selectedNode.path), name)
                 : name,
+            canOpen: type === "dir" || !!name.match(AllowedFilesRegex),
             name,
             label: name,
             value: name,
@@ -147,60 +163,18 @@ export default function WorkspacePanel() {
                         showIndentLine: true,
                         getChildren,
                         height: treeH,
-                        renderTreeNode: node => {
-                            const fsNode = node as FSTreeNode
-                            const fsHandle = fsNode.handle
-                            return h(Dropdown, {
-                                size: "sm",
-                                noCaret: true,
-                                renderToggle: p =>
-                                    h(FlexRowC, {
-                                        ...p,
-                                        style: { gap: 5, width: "100%" }
-                                    },
-                                        fsHandle.kind === "directory" ?
-                                            h_(FolderFillIcon) :
-                                            h_(PageIcon),
-                                        node.label),
-                                trigger: "contextMenu",
-                            },
-                                fsHandle.kind === "file"
-                                    ? h(Dropdown.Item, {
-                                        onClick: () => {
-                                            fileActions.openFile(fsNode.path)
-                                        }
-                                    },
-                                        "Open")
-                                    : null,
-                                h(Dropdown.Item, {
-                                    onClick: () => {
-                                        fileActions.deleteFile(fsNode.path)
-                                    }
-                                },
-                                    "Delete"),
-                                fsHandle.kind === "directory"
-                                    ? h(Dropdown.Item, {
-                                        onClick: () => {
-                                            setSelectedNode(fsNode)
-                                            newFileTriggerRef.current?.open()
-                                        }
-                                    },
-                                        "New File")
-                                    : null,
-                                fsHandle.kind === "directory"
-                                    ? h(Dropdown.Item, {
-                                        onClick: () => {
-                                            setSelectedNode(fsNode)
-                                            newFolderTriggerRef.current?.open()
-                                        }
-                                    }, "New Folder")
-                                    : null)
-                        },
+                        renderTreeNode: node =>
+                            h(TreeNodeItem, {
+                                node: node as FSTreeNode,
+                                onTriggerNewFile,
+                                onTriggerNewDir,
+                            }),
                         onSelect: async (node) => {
                             const fsNode = node as FSTreeNode
                             setSelectedNode(fsNode)
                             const fsHandle = fsNode.handle
                             if (fsHandle.kind !== "file") return
+                            if (!fsNode.canOpen) return
                             const fileHandle = fsHandle as FileSystemFileHandle
                             const blob = await fileHandle.getFile()
                             fileActions.openFile(fsNode.path, Object.assign(blob, {
@@ -209,6 +183,62 @@ export default function WorkspacePanel() {
                         },
                     })
                     : null))
+}
+
+function TreeNodeItem(p: {
+    node: FSTreeNode
+    onTriggerNewFile: (node: FSTreeNode) => void
+    onTriggerNewDir: (node: FSTreeNode) => void
+}) {
+    const fsNode = p.node
+    const fsHandle = fsNode.handle
+    return h(Dropdown, {
+        size: "sm",
+        noCaret: true,
+        renderToggle: p =>
+            h(FlexRowC, {
+                ...p,
+                style: {
+                    gap: 5,
+                    width: "100%",
+                    opacity: fsNode.canOpen ? 1 : 0.5
+                },
+            },
+                fsHandle.kind === "directory" ?
+                    h_(FolderFillIcon) :
+                    h_(PageIcon),
+                fsNode.label),
+        trigger: "contextMenu",
+    },
+        fsHandle.kind === "file"
+            ? h(Dropdown.Item, {
+                onClick: () => {
+                    fileActions.openFile(fsNode.path)
+                }
+            },
+                "Open")
+            : null,
+        h(Dropdown.Item, {
+            onClick: () => {
+                fileActions.deleteFile(fsNode.path)
+            }
+        },
+            "Delete"),
+        fsHandle.kind === "directory"
+            ? h(Dropdown.Item, {
+                onClick: () => {
+                    p.onTriggerNewDir(fsNode)
+                }
+            },
+                "New File")
+            : null,
+        fsHandle.kind === "directory"
+            ? h(Dropdown.Item, {
+                onClick: () => {
+                    p.onTriggerNewFile(fsNode)
+                }
+            }, "New Folder")
+            : null)
 }
 
 
@@ -238,6 +268,7 @@ const getNodesForDir = async (
             label: key,
             handle: value,
             value: path,
+            canOpen: value.kind === "directory" || !!path.match(AllowedFilesRegex),
             dir: value.kind === "directory" ? {
                 handle: value
             } : parentPath ? {

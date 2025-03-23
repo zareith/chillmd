@@ -10,6 +10,7 @@ import { MaybeN } from "../utils/types";
 export interface FSTreeNode extends TreeNode {
     path: string
     name: string
+    canOpen: boolean
     // Ref to closest directory
     // If the node is directory - its own handle
     // Else its parent directory
