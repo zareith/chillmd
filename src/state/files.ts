@@ -5,6 +5,7 @@ import { atomWithImmer as atomI } from "jotai-immer";
 import { FileWithHandle } from "browser-fs-access";
 import { TreeNode } from "rsuite/esm/internals/Tree/types";
 import { store } from "./store";
+import { MaybeN } from "../utils/types";
 
 export interface FSTreeNode extends TreeNode {
     path: string
@@ -73,7 +74,10 @@ interface FilePreview {
 type FilePreviews = Record<string, FilePreview | undefined>
 
 export const previews$ = atom(async (get): Promise<FilePreviews> => {
-    const prev = await get(previews$)
+    let prev: MaybeN<FilePreviews> = null;
+    try {
+        prev = await get(previews$)
+    } catch (e) {}
     const openFiles = get(openFiles$)
     const next = { ...prev }
     for (const f of openFiles) {

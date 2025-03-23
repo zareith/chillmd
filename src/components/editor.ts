@@ -1,18 +1,18 @@
 import "../styles/toast-editor.css";
 import { useEffect, useRef, useState } from "preact/hooks";
 import * as fileActions from "../actions/files";
-import * as fileStore from "../state/files";
+import * as fileAtoms from "../state/files";
 import { defineOptions, ink, Instance } from 'ink-mde'
 import "./editor.css"
 import { h } from "../utils/preact";
 import { useAtomValue } from "jotai";
 
 export default function Editor() {
-    const curFile = useAtomValue(fileStore.currentFile$);
-    const [curPath, setCurPath] = useState<string | null>(curFile?.path ?? null);
+    const curFile = useAtomValue(fileAtoms.currentFile$)
+    const [curPath, setCurPath] = useState<string | null>(curFile?.path ?? null)
     const containerRef = useRef<HTMLDivElement | null>(null)
-    const editorRef = useRef<Instance | null>(null);
-    const openFiles = useAtomValue(fileStore.openFiles$)
+    const editorRef = useRef<Instance | null>(null)
+    const openFiles = useAtomValue(fileAtoms.openFiles$)
 
     useEffect(() => {
         const expectedPath = curFile?.path
@@ -49,7 +49,8 @@ export default function Editor() {
         }
     }, [curFile?.path])
 
-    const handleContainerClick = () => {
+    const handleContainerClick = (e: MouseEvent) => {
+        if ((e.target as HTMLElement)?.closest?.(".cm-panels")) return;
         editorRef.current?.focus();
     }
 

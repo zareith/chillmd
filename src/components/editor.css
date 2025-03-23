@@ -11,6 +11,7 @@
     right: 0;
     bottom: 0;
     overflow: auto;
+    padding: 0 !important;
 
     font-size: 1rem;
     --ink-syntax-heading-font-size: 1em;
@@ -41,16 +42,16 @@
     z-index: 2;
 }
 
-.chillmd-editor-preview {
-    margin: 10px auto;
+.ink-mde-editor .cm-content {
+    width: 100% !important;
 }
 
-.ink-mde-editor .cm-editor,
+.ink-mde-editor .cm-content,
 .chillmd-editor-preview {
     z-index: 1;
-    max-width: 800px;
-    width: 100%;
-    margin: 35px auto;
+    max-width: 800px !important;
+    margin: 70px auto !important;
+    padding: 0 20px !important;
 }
 
 .chillmd-editor-inner-preview h1 {
@@ -89,6 +90,8 @@
 }
 
 .ink-mde-container {
+    height: 100%;
+    overflow: auto;
     outline: 0 !important;
 }
 

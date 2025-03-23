@@ -1,5 +1,5 @@
 import { toast } from "react-toastify";
-import * as filesStore from "../state/files";
+import * as fileAtoms from "../state/files";
 import {
     fileOpen,
     fileSave,
@@ -18,7 +18,7 @@ export const openFile = async (id?: string, blob?: FileWithHandle) => {
         mimeTypes: ["text/*"]
     })
     const wipContent = await blob.text()
-    store.set(filesStore.openFiles$, draft => {
+    store.set(fileAtoms.openFiles$, draft => {
         let didFind = false;
         draft.forEach(_ => {
             _.isOpen = _.path === id;
@@ -36,10 +36,10 @@ export const openFile = async (id?: string, blob?: FileWithHandle) => {
 
 export const openNewFile = () => {
     let name = `${format(new Date(), 'yyyy-MM-dd')}.md`
-    if (store.get(filesStore.openFiles$)?.find(_ => _.name === name)) {
+    if (store.get(fileAtoms.openFiles$)?.find(_ => _.name === name)) {
         name = name.replace(/\.md$/, `-${+new Date()}.md`)
     }
-    store.set(filesStore.openFiles$, draft => {
+    store.set(fileAtoms.openFiles$, draft => {
         draft.forEach(_ => {
             _.isOpen = false;
         })
@@ -54,7 +54,7 @@ export const openNewFile = () => {
 }
 
 export const closeFile = async (path: string) => {
-    store.set(filesStore.openFiles$, draft => {
+    store.set(fileAtoms.openFiles$, draft => {
         const idx = draft.findIndex(f => f.path === path);
         draft.splice(idx, 1)
     })
@@ -62,16 +62,16 @@ export const closeFile = async (path: string) => {
 
 export const deleteFile = async (path: string) => {
     closeFile(path)
-    store.set(filesStore.workspace$, w => {
+    store.set(fileAtoms.workspace$, w => {
         if (!w?.nodes) return
-        const f = filesStore.deepFind(path.split("/"), true, w.nodes)
+        const f = fileAtoms.deepFind(path.split("/"), true, w.nodes)
         // @ts-ignore
         f?.handle.remove()
     })
 }
 
 export const switchFile = async (path: string) => {
-    store.set(filesStore.openFiles$, draft => {
+    store.set(fileAtoms.openFiles$, draft => {
         draft.forEach(_ => {
             _.isOpen = _.path === path
         })
@@ -80,7 +80,7 @@ export const switchFile = async (path: string) => {
 
 export const updateFile = async (path: string, content: string) => {
     let shouldAutoSave = false;
-    store.set(filesStore.openFiles$, draft => {
+    store.set(fileAtoms.openFiles$, draft => {
         for (const f of draft) {
             if (f.path === path) {
                 if (f.blob?.handle && f.wipContent !== content)
@@ -106,8 +106,8 @@ const scheduleSave = (path: string) => {
 
 export const save = async (fileId?: string) => {
     const f = fileId
-        ? store.get(filesStore.openFiles$).find(_ => _.path === fileId)
-        : store.get(filesStore.currentFile$)
+        ? store.get(fileAtoms.openFiles$).find(_ => _.path === fileId)
+        : store.get(fileAtoms.currentFile$)
     if (!f) return
     const blob = new Blob([f.wipContent], {
         type: "text/markdown"
@@ -118,7 +118,7 @@ export const save = async (fileId?: string) => {
 export const copy = async () => {
     toast.promise(
         navigator.clipboard.writeText(
-            store.get(filesStore.currentFile$)?.wipContent ?? "",
+            store.get(fileAtoms.currentFile$)?.wipContent ?? "",
         ),
         {
             success: "Copied to clipboard",

@@ -22,4 +22,10 @@ body {
 
 * {
      scrollbar-width: thin;
+     scrollbar-color: #ddd transparent;
+}
+
+::-webkit-scrollbar-thumb {
+     background: #ddd;
+     border-radius: 5px;
 }
