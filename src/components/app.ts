@@ -24,10 +24,7 @@ export default function App() {
     const [splitSize, setSplitSize] = useState(40);
     const layout = useAtomValue(layout$)
 
-    console.log('layout:', layout)
-
     useEffect(() => {
-        debugger
         if (layout.openSidebar) {
             setSplitSize(300);
         } else {
