@@ -13,19 +13,22 @@ import PageIcon from '@rsuite/icons/Page';
 import "./workspace-panel.css"
 import { useLayoutEffect, useRef, useState } from "preact/hooks";
 import * as fileActions from "../actions/files";
-import { deepFind, FSTreeNode, workspace$ } from "../state/files";
+import { deepFind, FSTreeNode, useWorkspace$, workspace$ } from "../state/files";
 import { VNode } from "preact";
 import { useAtom } from "jotai";
+import { nanoid } from "nanoid";
+import { useLocation } from "preact-iso";
 
 export default function WorkspacePanel() {
-    const [workspace, setWorkspace] = useAtom(workspace$)
-    const isCreating = !workspace
+    const wsStore = useWorkspace$()
+    const isCreating = !wsStore.workspace
     const toaster = useToaster();
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [treeH, setTreeH] = useState(0)
     const [selectedNode, setSelectedNode] = useState<FSTreeNode | null>(null)
     const newFileTriggerRef = useRef<WhisperInstance>(null)
     const newFolderTriggerRef = useRef<WhisperInstance>(null)
+    const loc = useLocation();
 
     useLayoutEffect(() => {
         const bounds = containerRef.current?.getBoundingClientRect();
@@ -34,8 +37,8 @@ export default function WorkspacePanel() {
     })
 
     const createNode = async (name: string, type: "file" | "dir") => {
-        if (!workspace) return;
-        let parentDir = selectedNode?.dir?.handle ?? workspace?.dir
+        if (!wsStore.workspace) return;
+        let parentDir = selectedNode?.dir?.handle ?? wsStore.workspace?.dir
         if (!parentDir) return
         let nextHandle: FileSystemHandle | null = null;
         if (type === "file") {
@@ -50,7 +53,7 @@ export default function WorkspacePanel() {
         if (!nextHandle) return;
         const pathArr = selectedNode?.path?.split("/")
         let parentPath = pathArr?.slice(0, -1);
-        const roots = workspace?.nodes ?? []
+        const roots = wsStore.workspace?.nodes ?? []
         const node = parentPath
             ? deepFind(parentPath)
             : null
@@ -68,9 +71,7 @@ export default function WorkspacePanel() {
             } : undefined,
             children: type === "dir" ? [] : undefined
         })
-        setWorkspace(w => {
-            if (w) w.nodes = [...roots]
-        })
+        wsStore.updateNodes(_prev => [...roots])
     }
 
     return h("div", {
@@ -88,9 +89,14 @@ export default function WorkspacePanel() {
                     size: "xs",
                     onClick: async () => {
                         withToaster(async () => {
-                            const dir = await window.showDirectoryPicker();
+                            const dir = await window.showDirectoryPicker({
+                                startIn: "documents",
+                                mode: "readwrite"
+                            });
                             const nodes = await getNodesForDir(undefined, dir);
-                            setWorkspace({ dir, nodes })
+                            const id = nanoid();
+                            wsStore.initWorkspace({ id, dir, nodes });
+                            loc.route(`/ws/${id}`)
                         }, {
                             toaster
                         })
@@ -106,7 +112,7 @@ export default function WorkspacePanel() {
                     h("div", {
                         className: "chillmd-ws-title"
                     },
-                        workspace?.dir.name),
+                        wsStore.workspace?.dir.name),
                     h(Whisper, {
                         ref: newFileTriggerRef,
                         placement: "bottom",
@@ -143,7 +149,7 @@ export default function WorkspacePanel() {
 
                 treeH
                     ? h(Tree, {
-                        data: workspace?.nodes ?? [],
+                        data: wsStore.workspace?.nodes ?? [],
                         showIndentLine: true,
                         getChildren,
                         height: treeH,
@@ -276,6 +282,5 @@ const NewNodePopup = (p: {
             h(InputGroup.Button, {
                 onClick: () => p.onSubmit(name)
             },
-                h_(FiCheck))
-        ))
+                h_(FiCheck))))
 }

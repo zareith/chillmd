@@ -1,11 +1,13 @@
 import DOMPurify from "dompurify"
 import { marked } from "marked"
-import { atom } from "jotai"
+import { atom, useAtom } from "jotai"
 import { atomWithImmer as atomI } from "jotai-immer";
 import { FileWithHandle } from "browser-fs-access";
 import { TreeNode } from "rsuite/esm/internals/Tree/types";
 import { store } from "./store";
+import { get, set } from 'idb-keyval';
 import { MaybeN } from "../utils/types";
+import { workspaceRootKey } from "../utils/idb-keys";
 
 export interface FSTreeNode extends TreeNode {
     path: string
@@ -18,10 +20,38 @@ export interface FSTreeNode extends TreeNode {
     children?: FSTreeNode[]
 }
 
-export const workspace$ = atomI<{
+interface WorkspaceState {
+    id: string,
     dir: FileSystemDirectoryHandle,
     nodes?: FSTreeNode[]
-} | null>(null)
+}
+
+export const workspace$ = atomI<WorkspaceState | null>(null)
+
+export const useWorkspace$ = () => {
+    const [workspace, setWorkspace] = useAtom(workspace$);
+
+    const initWorkspace = (state: WorkspaceState) => {
+        setWorkspace(state);
+        set(workspaceRootKey, state.dir).catch(e => {
+            console.error(`Failed to set ${workspaceRootKey}`, e)
+        })
+    }
+
+    const updateNodes = (update: (prev: MaybeN<FSTreeNode[]>) => FSTreeNode[]) => {
+        setWorkspace(prev => {
+            if (prev) {
+                prev.nodes = update(prev.nodes)
+            }
+        })
+    }
+
+    return {
+        initWorkspace,
+        updateNodes,
+        workspace,
+    }
+}
 
 export const deepFind = (
     path: string[],
@@ -57,7 +87,7 @@ export const currentFile$ = atom((get): FileState | null =>
     get(openFiles$).find(_ => _.isOpen) ?? null);
 
 export const updateCurrent = (update: (f: FileState) => void): void => {
-    store.set(openFiles$, files=> {
+    store.set(openFiles$, files => {
         for (const f of files) {
             if (f.isOpen) {
                 update(f)
@@ -77,7 +107,7 @@ export const previews$ = atom(async (get): Promise<FilePreviews> => {
     let prev: MaybeN<FilePreviews> = null;
     try {
         prev = await get(previews$)
-    } catch (e) {}
+    } catch (e) { }
     const openFiles = get(openFiles$)
     const next = { ...prev }
     for (const f of openFiles) {

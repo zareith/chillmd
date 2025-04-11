@@ -9,11 +9,25 @@ import "./editor-group.css"
 import { FiX } from "react-icons/fi";
 import Preview from "./preview";
 import { useAtomValue, useSetAtom } from "jotai";
-import { Suspense } from "preact/compat";
+import { Suspense, useEffect } from "preact/compat";
+import { useLocation, useRoute } from "preact-iso";
 
 export default function EditorGroup() {
+    const route = useRoute();
+    const loc = useLocation();
+
+    const ws = useAtomValue(fileAtoms.workspace$)
     const curFile = useAtomValue(fileAtoms.currentFile$)
     const previewing = curFile?.previewing
+
+    useEffect(() => {
+        const path = curFile?.path;
+        if (!ws) {
+            loc.route("/");
+            return;
+        }
+        if (path) loc.route(`/ws/${ws.id}/${path}`)
+    }, [curFile?.path])
 
     return h(FlexColS, {
         className: "chillmd-ed-group-container"
