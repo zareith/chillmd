@@ -1,7 +1,10 @@
 // @ts-expect-error
 import ghpages from "gh-pages";
 
-ghpages.publish("dist", (e: any) => {
+ghpages.publish("dist", {
+    nojekyll: true,
+    cname: "notegobl.in",
+}, (e: any) => {
   if (e) {
     console.error(e);
     process.exit(1);
