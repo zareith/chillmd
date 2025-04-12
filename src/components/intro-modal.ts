@@ -17,7 +17,7 @@ export default function IntroModal(p: {
             ),
             h("p", {
                 ...S.props(s.introPara),
-            }, "Chillmd is a privacy focussed markdown editor that works entirely in your brower"),
+            }, "Note Goblin is a privacy focussed markdown editor that works entirely in your brower"),
             h("table", {},
                 h("tbody", {},
                     h("tr", {},
@@ -39,9 +39,9 @@ export default function IntroModal(p: {
                     h("tr", {},
                         h("td", { ...S.props(s.logoColCell) },
                             h("a", {
-                                href: "https://github.com/zareith/chillmd",
+                                href: "https://github.com/zareith/note-goblin",
                                 target: "_blank",
-                            }, 
+                            },
                             h("img", { src: "github-mark.svg", width: 30 })),
                         ),
                         h("td", {}, h("p", {}, "Your feedback and contributions are welcome.")),

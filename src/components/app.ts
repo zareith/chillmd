@@ -19,7 +19,7 @@ import { useEffect, useState } from 'preact/hooks'
 export default function App() {
     const [didDismissIntro, setDismissIntro] =
         // useState(false);
-        useLocalStorage("chillmd:feat:intro", false)
+        useLocalStorage("ngoblin:feat:intro", false)
     const isWide = useLayoutWide();
     const [splitSize, setSplitSize] = useState(40);
     const layout = useAtomValue(layout$)

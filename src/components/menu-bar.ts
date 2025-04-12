@@ -57,7 +57,7 @@ export default function MenuBar() {
                 onClick: () => window.open("https://www.gnu.org/licenses/gpl-3.0.en.html"),
             }, "License"),
             h(Dropdown.Item, {
-                onClick: () => window.open("https://github.com/zareith/chillmd"),
+                onClick: () => window.open("https://github.com/zareith/note-goblin"),
             }, "Source code"),
         ),
     );
