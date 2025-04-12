@@ -30,7 +30,7 @@ export default function EditorGroup() {
     }, [curFile?.path])
 
     return h(FlexColS, {
-        className: "chillmd-ed-group-container"
+        className: "ngoblin-ed-group-container"
     },
         h(Suspense, {
             fallback: h_("div", "Loading...")
@@ -48,7 +48,7 @@ function Footer() {
     const previewing = curFile?.previewing
 
     return h(FlexRowC, {
-        className: "chillmd-ed-group-footer",
+        className: "ngoblin-ed-group-footer",
     },
         h_(TabStrip),
 

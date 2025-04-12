@@ -55,7 +55,7 @@ export default function Editor() {
     }
 
     return h("div", {
-        className: "chillmd-editor-container",
+        className: "ngoblin-editor-container",
         tabIndex: -1,
         onClick: handleContainerClick,
         ref: containerRef,

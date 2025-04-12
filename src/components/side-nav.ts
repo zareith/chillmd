@@ -16,10 +16,10 @@ export default function SideNav() {
     const [layout, setLayout] = useAtom(layout$)
 
     return h(FlexRowS, {
-        className: `chillmd-side-nav-container ${layout.openSidebar ? "-expanded" : ""}`
+        className: `ngoblin-side-nav-container ${layout.openSidebar ? "-expanded" : ""}`
     },
         h("div", {
-            className: "chillmd-side-nav"
+            className: "ngoblin-side-nav"
         },
             h(Button, {
                 appearance: "subtle",
@@ -45,7 +45,7 @@ export default function SideNav() {
             })),
 
         layout.openSidebar && h("div", {
-            className: "chillmd-side-nav-expanded"
+            className: "ngoblin-side-nav-expanded"
         },
             h_(WorkspacePanel))
     );

@@ -91,7 +91,7 @@ export default function WorkspacePanel() {
     }
 
     return h("div", {
-        className: "chillmd-ws-panel",
+        className: "ngoblin-ws-panel",
         ref: containerRef,
     },
         isCreating ?
@@ -120,13 +120,13 @@ export default function WorkspacePanel() {
                 }, "Open Folder")) :
 
             h("div", {
-                className: "chillmd-ws-tree"
+                className: "ngoblin-ws-tree"
             },
                 h("div", {
-                    className: "chillmd-ws-header"
+                    className: "ngoblin-ws-header"
                 },
                     h("div", {
-                        className: "chillmd-ws-title"
+                        className: "ngoblin-ws-title"
                     },
                         wsStore.workspace?.dir.name),
                     h(Whisper, {

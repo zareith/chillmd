@@ -5,7 +5,7 @@
     "scripts": {
         "dev": "vite",
         "typecheck": "tsc",
-        "build": "cross-env BASE_PATH=\"https://zareith.github.io/chillmd/\" vite build && cp dist/index.html dist/404.html",
+        "build": "cross-env BASE_PATH=\"https://notegobl.in/\" vite build && cp dist/index.html dist/404.html",
         "deploy": "tsx ./src/scripts/deploy-site.ts",
         "preview": "vite preview"
     },

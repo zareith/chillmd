@@ -1,10 +1,10 @@
-.chillmd-editor-container {
+.ngoblin-editor-container {
     position: relative;
     flex-grow: 1;
     flex-shrink: 1;
 }
 
-.chillmd-preview-container, .ink-mde-editor {
+.ngoblin-preview-container, .ink-mde-editor {
     position: absolute;
     top: 0;
     left: 0;
@@ -30,7 +30,7 @@
     --ink-syntax-heading6-font-weight: 600;
 }
 
-.chillmd-editor-preview {
+.ngoblin-editor-preview {
     padding: 0.5rem;
 }
 
@@ -47,39 +47,39 @@
 }
 
 .ink-mde-editor .cm-content,
-.chillmd-editor-preview {
+.ngoblin-editor-preview {
     z-index: 1;
     max-width: 800px !important;
     margin: 70px auto !important;
     padding: 0 20px !important;
 }
 
-.chillmd-editor-inner-preview h1 {
+.ngoblin-editor-inner-preview h1 {
     font-size: var(--ink-syntax-heading1-font-size);
     font-weight: var(--ink-syntax-heading1-font-weight);
 }
 
-.chillmd-editor-inner-preview h2 {
+.ngoblin-editor-inner-preview h2 {
     font-size: var(--ink-syntax-heading2-font-size);
     font-weight: var(--ink-syntax-heading2-font-weight);
 }
 
-.chillmd-editor-inner-preview h3 {
+.ngoblin-editor-inner-preview h3 {
     font-size: var(--ink-syntax-heading3-font-size);
     font-weight: var(--ink-syntax-heading3-font-weight);
 }
 
-.chillmd-editor-inner-preview h4 {
+.ngoblin-editor-inner-preview h4 {
     font-size: var(--ink-syntax-heading4-font-size);
     font-weight: var(--ink-syntax-heading4-font-weight);
 }
 
-.chillmd-editor-inner-preview h5 {
+.ngoblin-editor-inner-preview h5 {
     font-size: var(--ink-syntax-heading5-font-size);
     font-weight: var(--ink-syntax-heading5-font-weight);
 }
 
-.chillmd-editor-inner-preview h6 {
+.ngoblin-editor-inner-preview h6 {
     font-size: var(--ink-syntax-heading6-font-size);
     font-weight: var(--ink-syntax-heading6-font-weight);
 }

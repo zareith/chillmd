@@ -1,16 +1,16 @@
-.chillmd-ed-group-container {
+.ngoblin-ed-group-container {
     flex-grow: 1;
     flex-shrink: 1;
     background: white;
 }
 
-.Pane .chillmd-ed-group-container {
+.Pane .ngoblin-ed-group-container {
     height: 100%;
     width: 100%;
 
 }
 
-.chillmd-ed-group-footer {
+.ngoblin-ed-group-footer {
     border-top: 1px solid var(--rs-gray-200);
     padding: 5px 10px 0 5px;
 }

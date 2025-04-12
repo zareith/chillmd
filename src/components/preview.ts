@@ -16,13 +16,13 @@ export default function Preview() {
         : null
 
     return h("div", {
-        className: "chillmd-editor-container"
+        className: "ngoblin-editor-container"
     },
         h("div", {
-            className: "chillmd-preview-container"
+            className: "ngoblin-preview-container"
         },
             h("div", {
-                className: "chillmd-editor-preview",
+                className: "ngoblin-editor-preview",
                 ref: containerRef,
                 dangerouslySetInnerHTML: {
                     __html: preview?.preview ?? ""
